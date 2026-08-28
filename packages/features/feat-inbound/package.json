@@ -1,0 +1,15 @@
+{
+  "name": "@cwms/feat-inbound",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cwms/client-registry": "workspace:*",
+    "@cwms/contracts": "workspace:*",
+    "@cwms/core-ledger": "workspace:*",
+    "@cwms/kernel": "workspace:*"
+  }
+}
