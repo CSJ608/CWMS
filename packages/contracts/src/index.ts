@@ -14,6 +14,7 @@ export const LEDGER = 'ledger'
 export const INBOUND = 'inbound'
 export const TASK = 'task'
 export const PDA_WORKFLOWS = 'pda/workflows'
+export const PDA_RUNTIME = 'pda/runtime'
 export const DASHBOARD_CARDS = 'dashboard/cards'
 
 // ---- 领域最小模型 ----
