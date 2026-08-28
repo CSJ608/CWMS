@@ -23,6 +23,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 | `packages/kernel` | 内核 | 可逆插件机制：服务注入、LIFO 副作用回滚、级联卸载、emit/waterfall 事件 |
 | `packages/contracts` | 契约 | 全系统唯一跨包词汇表：领域类型、服务 key、事件契约、客户端描述符 |
 | `packages/core-ledger` | 内核 | 库存账：唯一变更通道，拒绝负库存，守护账实守恒 |
+| `packages/core-task` | 内核 | 任务机：显式迁移表 + opId 幂等推进（PDA 弱网重试安全），领域无关 |
 | `packages/client-registry` | 内核 | 客户端模块注册表：client 半身是数据描述符，不是页面 |
 | `packages/plugins/putaway-zone` | 策略 | 区域优先级上架（缺省提供者，零配置可用） |
 | `packages/plugins/putaway-abc` | 策略 | ABC 动碰分级（可选提供者，配置驱动） |
@@ -56,6 +57,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 - [ADR-0002 配置分层：简单场景必须免费](docs/adr/0002-配置分层-简单场景必须免费.md)
 - [ADR-0003 包拓扑：纵切片，按角色拆缝](docs/adr/0003-包拓扑-纵切片按角色拆缝.md)
 - [ADR-0004 三端投影：PC/PDA/大屏是同一领域的三种函数](docs/adr/0004-三端投影.md)
+- [ADR-0005 任务机内核：显式迁移表与 opId 幂等推进](docs/adr/0005-任务机内核-迁移表与幂等推进.md)
 
 理念出处与新会话按需阅读地图见[参考资料索引](docs/references.md)。
 
