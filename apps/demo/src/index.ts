@@ -6,12 +6,13 @@
  * ABC overlay 配置改变决策（复杂度按需付费）→ 客户端投影只是数据。
  */
 
-import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_RUNTIME, PDA_WORKFLOWS, PC_RUNTIME, TASK, type ReceiptLine } from '@cwms/contracts'
+import { DASHBOARD_BOARD, DASHBOARD_CARDS, DASHBOARD_RUNTIME, INBOUND, LEDGER, PDA_RUNTIME, PDA_WORKFLOWS, PC_RUNTIME, TASK, type ReceiptLine } from '@cwms/contracts'
 import { ClientRegistry, type DashboardCard, type PdaWorkflow } from '@cwms/client-registry'
 import { ledgerPlugin, Ledger } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
 import { PdaRuntime, pdaRuntimePlugin } from '@cwms/pda-runtime'
 import { PcRuntime, pcRuntimePlugin } from '@cwms/pc-runtime'
+import { DashboardRuntime, dashboardRuntimePlugin, TaskBoard, taskBoardPlugin } from '@cwms/dashboard-runtime'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
 import { createSystem } from '@cwms/kernel'
@@ -38,6 +39,8 @@ function build() {
   system.mount(putawayZonePlugin)
   system.mount(pdaRuntimePlugin)
   system.mount(pcRuntimePlugin)
+  system.mount(dashboardRuntimePlugin)
+  system.mount(taskBoardPlugin)
   return system
 }
 
@@ -153,6 +156,13 @@ try {
 const pc = system.getService<PcRuntime>(PC_RUNTIME)
 pc.bindProvider('inventory', () => system.getService<Ledger>(LEDGER).snapshot().map((line) => ({ ...line })))
 say('⑨ PC 表格：库存一览（组合根绑定数据源）', pc.query('inventory'))
+
+// 10. 大屏投影：卡片指标 + task/changed 作业看板（ADR-0010）——"大屏是指标的函数"
+const dash = system.getService<DashboardRuntime>(DASHBOARD_RUNTIME)
+dash.bindMetric('todayInboundQty', () => system.getService<{ todayInboundQty: number }>('dashboard/read-model').todayInboundQty)
+dash.bindMetric('stockTotalQty', () => system.getService<Ledger>(LEDGER).total())
+say('⑩a 大屏卡片（组合根绑定指标源）', dash.cards().map((card) => dash.query(card.id)))
+say('⑩b 作业看板（task/changed 事件喂养）', system.getService<TaskBoard>(DASHBOARD_BOARD).snapshot())
 
 console.log('\n== 账本终态（唯一变更通道的产物） ==')
 console.log(JSON.stringify(system.getService<Ledger>(LEDGER).snapshot(), null, 2))

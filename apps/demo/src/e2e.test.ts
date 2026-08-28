@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { INBOUND, LEDGER, PDA_RUNTIME, PC_RUNTIME, TASK } from '@cwms/contracts'
+import { DASHBOARD_BOARD, DASHBOARD_RUNTIME, INBOUND, LEDGER, PDA_RUNTIME, PC_RUNTIME, TASK } from '@cwms/contracts'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { Ledger, ledgerPlugin } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
 import { PdaRuntime, pdaRuntimePlugin } from '@cwms/pda-runtime'
 import { PcRuntime, pcRuntimePlugin } from '@cwms/pc-runtime'
+import { DashboardRuntime, dashboardRuntimePlugin, TaskBoard, taskBoardPlugin } from '@cwms/dashboard-runtime'
 import { createSystem, definePlugin } from '@cwms/kernel'
 import { putawayZonePlugin } from '@cwms/plugin-putaway-zone'
 import { vetoMixedLotPlugin } from '@cwms/plugin-veto-mixed-lot'
@@ -21,6 +22,8 @@ function build(withVeto = false) {
   if (withVeto) system.mount(vetoMixedLotPlugin)
   system.mount(pdaRuntimePlugin)
   system.mount(pcRuntimePlugin)
+  system.mount(dashboardRuntimePlugin)
+  system.mount(taskBoardPlugin)
   return system
 }
 
@@ -96,8 +99,11 @@ describe('端到端：PDA 扫码 → runtime → 任务机 → 策略缝 → 账
     expect(system.getService<TaskService>(TASK).list('putaway', 'cancelled')).toHaveLength(1)
   })
 
-  it('一次领域操作，三端投影同步：PDA 驱动、PC 呈现、大屏计数', () => {
+  it('一次领域操作，三端投影同步：PDA 驱动、PC 呈现、大屏卡片与作业看板', () => {
     const system = build(true)
+    const dash = system.getService<DashboardRuntime>(DASHBOARD_RUNTIME)
+    dash.bindMetric('todayInboundQty', () => system.getService<{ todayInboundQty: number }>('dashboard/read-model').todayInboundQty)
+    dash.bindMetric('stockTotalQty', () => system.getService<Ledger>(LEDGER).total())
     const { pda, session } = bootPda(system)
     pda.submit(session.id, 'SKU-7001', 'op-1')
     pda.submit(session.id, 'L7', 'op-2')
@@ -113,7 +119,13 @@ describe('端到端：PDA 扫码 → runtime → 任务机 → 策略缝 → 账
     expect(view.columns.map((c) => c.key)).toEqual(['location', 'sku', 'lot', 'qty'])
     expect(view.rows).toContainEqual({ location: 'C-03-01', sku: 'SKU-7001', lot: 'L7', qty: 4 })
 
-    const readModel = system.getService<{ todayInboundQty: number }>('dashboard/read-model')
-    expect(readModel.todayInboundQty).toBeGreaterThanOrEqual(4)
+    // 大屏卡片：描述符 + 组合根指标源，值跟随领域状态
+    expect(dash.cards().map((c) => c.id)).toEqual(['inbound-rate'])
+    expect(dash.query('inbound-rate').value).toBeGreaterThanOrEqual(4)
+    // 作业看板：task/changed 事件喂养，收货任务已入 completed 列
+    const board = system.getService<TaskBoard>(DASHBOARD_BOARD)
+    const completed = board.snapshot().columns.find((c) => c.status === 'completed')!
+    expect(completed.taskIds).toHaveLength(1)
+    expect(completed.taskIds[0]).toMatch(/^putaway-/)
   })
 })
