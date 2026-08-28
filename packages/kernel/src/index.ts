@@ -25,6 +25,12 @@ export interface Plugin<C = void> {
   name: string
   /** 依赖的服务 key。内核在挂载前校验，缺失则拒绝挂载。 */
   inject?: readonly string[]
+  /**
+   * 配置 schema（ADR-0007）。声明后 mount 的 overlay 会被解析：
+   * 零配置 → 全默认；overlay 深合并（record 逐键并、标量/数组替换）；
+   * 未知配置项与违约值报 ConfigError。apply 永远收到解析后的完整配置。
+   */
+  configSchema?: ConfigSchema<C>
   apply(ctx: Context, config: C): void
 }
 
@@ -95,7 +101,7 @@ export class System {
   /** 服务 key → 依赖该服务的插件名集合（用于级联卸载）。 */
   readonly #dependents = new Map<string, Set<string>>()
 
-  mount<C>(plugin: Plugin<C>, config?: C): void {
+  mount<C>(plugin: Plugin<C>, overlay?: Partial<C>): void {
     if (this.#entries.has(plugin.name)) {
       throw new Error(`插件 ${plugin.name} 已挂载`)
     }
@@ -109,6 +115,9 @@ export class System {
       set.add(plugin.name)
       this.#dependents.set(key, set)
     }
+    const config = plugin.configSchema
+      ? resolveConfig(plugin.configSchema, overlay)
+      : (overlay as C | undefined)
     const entry: Entry = { plugin, config, effects: [], provides: [] }
     this.#entries.set(plugin.name, entry)
     this.#effects.set(plugin.name, entry.effects)
@@ -148,10 +157,14 @@ export class System {
     return this.#entries.has(name)
   }
 
-  /** 热重载：卸载后重新挂载同一插件，配置可替换。外部可观察行为只取决于最终挂载集合。 */
-  reload<C>(plugin: Plugin<C>, config?: C): void {
+  /**
+   * 热重载：卸载后重新挂载同一插件，配置 overlay 可替换。
+   * 原子性：新配置非法（schema 解析失败）时先抛错、旧实例保持在岗。
+   */
+  reload<C>(plugin: Plugin<C>, overlay?: Partial<C>): void {
+    if (plugin.configSchema) resolveConfig(plugin.configSchema, overlay)
     this.unmount(plugin.name)
-    this.mount(plugin, config)
+    this.mount(plugin, overlay)
   }
 
   listenerCount(event: string): number {
@@ -210,4 +223,125 @@ export class System {
 
 export function createSystem(): System {
   return new System()
+}
+
+// ---- 配置 schema 与 overlay 解析（ADR-0002/0007）----
+//
+// 配置是产品决策：默认值让简单场景免费；overlay 让复杂场景按需付费。
+// 合并语义：record 逐键深合并（加一个冷链区不必抄全表），
+// 标量与数组整体替换（拼接的语义是含糊的）；未知配置项直接报错
+// （配置预算制——拼错的键静默失效比报错昂贵得多）。
+
+export interface FieldDef<T = unknown> {
+  kind: 'int' | 'string' | 'bool' | 'stringArray' | 'recordOfInt'
+  default: T
+  min?: number
+  max?: number
+}
+
+export type ConfigSchema<C> = { [K in keyof C]: FieldDef<C[K]> }
+
+export function defineConfigSchema<C>(schema: ConfigSchema<C>): ConfigSchema<C> {
+  return schema
+}
+
+export const configField = {
+  int: (def: number, opts: { min?: number; max?: number } = {}): FieldDef<number> => ({
+    kind: 'int',
+    default: def,
+    ...opts,
+  }),
+  string: (def: string): FieldDef<string> => ({ kind: 'string', default: def }),
+  bool: (def: boolean): FieldDef<boolean> => ({ kind: 'bool', default: def }),
+  stringArray: (def: string[]): FieldDef<string[]> => ({ kind: 'stringArray', default: def }),
+  recordOfInt: (def: Record<string, number>): FieldDef<Record<string, number>> => ({
+    kind: 'recordOfInt',
+    default: def,
+  }),
+}
+
+export class ConfigError extends Error {
+  constructor(
+    public readonly violations: string[],
+  ) {
+    super(`配置校验失败：\n- ${violations.join('\n- ')}`)
+    this.name = 'ConfigError'
+  }
+}
+
+export function resolveConfig<C>(schema: ConfigSchema<C>, overlay?: unknown): C {
+  const errors: string[] = []
+  const out: Record<string, unknown> = {}
+  const source = (
+    typeof overlay === 'object' && overlay !== null && !Array.isArray(overlay) ? overlay : {}
+  ) as Record<string, unknown>
+
+  for (const [key, def] of Object.entries(schema) as [string, FieldDef][]) {
+    const raw = source[key]
+    if (raw === undefined) {
+      out[key] = def.default
+      continue
+    }
+    switch (def.kind) {
+      case 'recordOfInt': {
+        if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+          errors.push(`${key}: 必须是对象`)
+          break
+        }
+        const merged: Record<string, number> = { ...(def.default as Record<string, number>) }
+        for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+          if (typeof v !== 'number' || !Number.isInteger(v)) errors.push(`${key}.${k}: 必须是整数`)
+          else merged[k] = v
+        }
+        out[key] = merged
+        break
+      }
+      case 'stringArray':
+        if (!Array.isArray(raw) || raw.some((v) => typeof v !== 'string')) {
+          errors.push(`${key}: 必须是字符串数组`)
+          break
+        }
+        out[key] = raw
+        break
+      case 'int':
+        if (typeof raw !== 'number' || !Number.isInteger(raw)) {
+          errors.push(`${key}: 必须是整数`)
+          break
+        }
+        if (def.min !== undefined && raw < def.min) {
+          errors.push(`${key}: 不能小于 ${def.min}`)
+          break
+        }
+        if (def.max !== undefined && raw > def.max) {
+          errors.push(`${key}: 不能大于 ${def.max}`)
+          break
+        }
+        out[key] = raw
+        break
+      case 'string':
+        if (typeof raw !== 'string') {
+          errors.push(`${key}: 必须是字符串`)
+          break
+        }
+        out[key] = raw
+        break
+      case 'bool':
+        if (typeof raw !== 'boolean') {
+          errors.push(`${key}: 必须是布尔值`)
+          break
+        }
+        out[key] = raw
+        break
+    }
+  }
+
+  const known = new Set(Object.keys(schema))
+  for (const key of Object.keys(source)) {
+    if (!known.has(key)) {
+      errors.push(`${key}: 未知的配置项（配置预算制见 ADR-0002；若是拼写错误请修正）`)
+    }
+  }
+
+  if (errors.length > 0) throw new ConfigError(errors)
+  return out as C
 }

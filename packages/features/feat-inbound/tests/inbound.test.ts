@@ -12,11 +12,11 @@ import {
 } from '@cwms/contracts'
 import { Ledger, ledgerPlugin } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
-import { createSystem, definePlugin } from '@cwms/kernel'
+import { createSystem, definePlugin, ConfigError } from '@cwms/kernel'
 import { putawayAbcPlugin } from '@cwms/plugin-putaway-abc'
-import { putawayZonePlugin } from '@cwms/plugin-putaway-zone'
 import { vetoMixedLotPlugin } from '@cwms/plugin-veto-mixed-lot'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
+import { putawayZonePlugin, type ZonePriorityConfig } from '@cwms/plugin-putaway-zone'
 
 const CANDIDATES = [
   { location: 'A-01-01', zone: 'A' },
@@ -148,5 +148,41 @@ describe('任务驱动的收货上架（core-task 集成，ADR-0005）', () => {
     expect(cancelled).toHaveLength(1)
     expect(cancelled[0]!.reason).toMatch(/混放/)
     expect(system.getService<Ledger>(LEDGER).find('STAGING', 'S1', 'L2')?.qty).toBe(3)
+  })
+})
+
+describe('配置 schema 化（ADR-0007 框架级验收）', () => {
+  it('零配置：zone 缺省区域表直接生效（简单场景免费）', () => {
+    const system = build()
+    const result = inbound(system).receive({ sku: 'S1', lot: 'L1', qty: 2 }, 'STAGING', [
+      { location: 'B-01-01', zone: 'B' },
+      { location: 'A-01-01', zone: 'A' },
+    ])
+    expect(result).toMatchObject({ blocked: false, location: 'A-01-01' })
+  })
+
+  it('深合并 overlay：新增 S 区置顶，缺省表保留——只加一行不抄全表', () => {
+    const system = build()
+    system.reload(putawayZonePlugin, { zonePriority: { S: 0 } })
+    const result = inbound(system).receive({ sku: 'S1', lot: 'L1', qty: 2 }, 'STAGING', [
+      { location: 'A-01-01', zone: 'A' },
+      { location: 'S-01-01', zone: 'S' },
+      { location: 'C-01-01', zone: 'C' },
+    ])
+    expect(result).toMatchObject({ blocked: false, location: 'S-01-01' })
+  })
+
+  it('未知配置项 reload 报错，旧配置保持在岗（配置预算制 + 原子 reload）', () => {
+    const system = build()
+    const bad: Record<string, unknown> = { zonePriorty: { S: 0 } } // 拼写错误
+    expect(() =>
+      system.reload(putawayZonePlugin, bad as unknown as Partial<ZonePriorityConfig>),
+    ).toThrow(ConfigError)
+    expect(system.isMounted('putaway-zone')).toBe(true)
+    const result = inbound(system).receive({ sku: 'S1', lot: 'L1', qty: 2 }, 'STAGING', [
+      { location: 'C-01-01', zone: 'C' },
+      { location: 'A-01-01', zone: 'A' },
+    ])
+    expect(result).toMatchObject({ location: 'A-01-01' }) // 缺省表仍然生效
   })
 })
