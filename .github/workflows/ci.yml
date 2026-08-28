@@ -18,6 +18,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: 依赖方向守卫（ADR-0003）
+        run: node scripts/check-deps.mjs
       - run: pnpm typecheck
       - run: pnpm test
 

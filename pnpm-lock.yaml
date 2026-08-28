@@ -89,18 +89,9 @@ importers:
 
   packages/features/feat-inbound:
     dependencies:
-      '@cwms/client-registry':
-        specifier: workspace:*
-        version: link:../../client-registry
       '@cwms/contracts':
         specifier: workspace:*
         version: link:../../contracts
-      '@cwms/core-ledger':
-        specifier: workspace:*
-        version: link:../../core-ledger
-      '@cwms/core-task':
-        specifier: workspace:*
-        version: link:../../core-task
       '@cwms/kernel':
         specifier: workspace:*
         version: link:../../kernel
@@ -139,9 +130,6 @@ importers:
       '@cwms/contracts':
         specifier: workspace:*
         version: link:../../contracts
-      '@cwms/core-ledger':
-        specifier: workspace:*
-        version: link:../../core-ledger
       '@cwms/kernel':
         specifier: workspace:*
         version: link:../../kernel

@@ -7,11 +7,13 @@ import {
   PDA_WORKFLOWS,
   TASK,
   type DashboardCard,
+  type InventoryLedger,
   type PdaWorkflow,
   type TaskChanged,
+  type TaskServiceView,
 } from '@cwms/contracts'
-import { Ledger, ledgerPlugin } from '@cwms/core-ledger'
-import { coreTaskPlugin, TaskService } from '@cwms/core-task'
+import { ledgerPlugin } from '@cwms/core-ledger'
+import { coreTaskPlugin } from '@cwms/core-task'
 import { createSystem, definePlugin, ConfigError } from '@cwms/kernel'
 import { putawayAbcPlugin } from '@cwms/plugin-putaway-abc'
 import { vetoMixedLotPlugin } from '@cwms/plugin-veto-mixed-lot'
@@ -51,7 +53,7 @@ describe('收货纵切片：一切皆插件的端到端证明', () => {
     const blocked = inbound(system).receive({ sku: 'S1', lot: 'L2', qty: 5 }, 'STAGING', CANDIDATES)
     expect(blocked.blocked).toBe(true)
     expect(blocked.reason).toMatch(/禁止.*混放/)
-    const ledger = system.getService<Ledger>(LEDGER)
+    const ledger = system.getService<InventoryLedger>(LEDGER)
     expect(ledger.find('STAGING', 'S1', 'L2')?.qty).toBe(5) // 被拒货物账上可见，未上架
     expect(ledger.total()).toBe(15) // 守恒
   })
@@ -119,18 +121,18 @@ describe('任务驱动的收货上架（core-task 集成，ADR-0005）', () => {
       'assigned→executing',
       'executing→completed',
     ])
-    expect(system.getService<TaskService>(TASK).list('putaway', 'completed')).toHaveLength(1)
+    expect(system.getService<TaskServiceView>(TASK).list('putaway', 'completed')).toHaveLength(1)
   })
 
   it('同 opId 重放：结局相同、账本不变——PDA 弱网重试安全', () => {
     const system = build()
     const line = { sku: 'S2', lot: 'L1', qty: 6 }
     const first = inbound(system).receiveViaTask(line, 'STAGING', CANDIDATES, 'op-B')
-    const totalAfterFirst = system.getService<Ledger>(LEDGER).total()
+    const totalAfterFirst = system.getService<InventoryLedger>(LEDGER).total()
     const replay = inbound(system).receiveViaTask(line, 'STAGING', CANDIDATES, 'op-B')
     expect(replay).toEqual(first)
-    expect(system.getService<Ledger>(LEDGER).total()).toBe(totalAfterFirst)
-    expect(system.getService<TaskService>(TASK).list()).toHaveLength(1)
+    expect(system.getService<InventoryLedger>(LEDGER).total()).toBe(totalAfterFirst)
+    expect(system.getService<TaskServiceView>(TASK).list()).toHaveLength(1)
   })
 
   it('决策被否决：任务取消并记录原因，货留暂存账上可查', () => {
@@ -144,10 +146,10 @@ describe('任务驱动的收货上架（core-task 集成，ADR-0005）', () => {
       'op-D',
     )
     expect(blocked.blocked).toBe(true)
-    const cancelled = system.getService<TaskService>(TASK).list('putaway', 'cancelled')
+    const cancelled = system.getService<TaskServiceView>(TASK).list('putaway', 'cancelled')
     expect(cancelled).toHaveLength(1)
     expect(cancelled[0]!.reason).toMatch(/混放/)
-    expect(system.getService<Ledger>(LEDGER).find('STAGING', 'S1', 'L2')?.qty).toBe(3)
+    expect(system.getService<InventoryLedger>(LEDGER).find('STAGING', 'S1', 'L2')?.qty).toBe(3)
   })
 })
 

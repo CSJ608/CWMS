@@ -103,6 +103,51 @@ export interface DashboardCard {
   metric: 'todayInboundQty' | 'stockTotalQty'
 }
 
+// ---- 服务契约：实现住在各包，接口住在契约包（ADR-0008）----
+//
+// 依赖方向铁律的执行点：功能与策略只准依赖 contracts + kernel，
+// 所以它们只能通过这里的接口认识服务。LedgerReader 是**只读视图**——
+// 策略与校验看得见账本现状，看不见变更通道（receive/ship/move 只属于
+// 被授权驱动的功能宿主）。实现类与接口是结构化匹配，无需显式继承。
+
+/** 账本只读视图：策略与校验缝的唯一窗口。 */
+export interface LedgerReader {
+  find(location: string, sku: string, lot: string): StockLine | undefined
+  linesAt(location: string): StockLine[]
+  total(): number
+  snapshot(): StockLine[]
+}
+
+/** 完整账本 API：只有被授权驱动变更的功能宿主使用。 */
+export interface InventoryLedger extends LedgerReader {
+  receive(line: ReceiptLine, location: string): void
+  ship(line: ReceiptLine, location: string): void
+  move(line: ReceiptLine, from: string, to: string): void
+}
+
+/** 任务机契约：领域无关的推进协议（ADR-0005）。 */
+export interface TaskDetail extends TaskSnapshot {
+  payload: unknown
+  result?: unknown
+}
+
+export interface TaskServiceView {
+  create(kind: string, payload: unknown, opId: string): TaskSnapshot
+  assign(taskId: string, worker: string, opId: string): TaskSnapshot
+  start(taskId: string, opId: string): TaskSnapshot
+  complete(taskId: string, result: unknown, opId: string): TaskSnapshot
+  cancel(taskId: string, reason: string, opId: string): TaskSnapshot
+  get(taskId: string): TaskDetail
+  list(kind?: string, status?: TaskStatus): TaskDetail[]
+}
+
+/** 客户端模块注册表契约：功能包向端 runtime 登记描述符的唯一通道。 */
+export interface ModuleRegistry<T extends { id: string }> {
+  register(item: T): void
+  get(id: string): T | undefined
+  all(): T[]
+}
+
 // ---- 事件契约（写入内核的注册表）----
 
 declare module '@cwms/kernel' {

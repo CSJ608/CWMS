@@ -22,7 +22,7 @@ CWMS 不是产品，是**试验田**：实践"一切皆插件"理念、探索工
 
 ## 关键约定（摘要，违反即返工）
 
-- **依赖方向铁律**（ADR-0003）：功能/策略 → contracts + kernel；内核不 import 策略；client 半身只通过 contracts 对话
+- **依赖方向铁律**（ADR-0003）：功能/策略 → contracts + kernel；内核不 import 策略；client 半身只通过 contracts 对话。**CI 守卫强制**（`pnpm check:deps`，ADR-0008）——服务接口住在 contracts，策略只见 LedgerReader 只读视图
 - **可逆性纪律**（ADR-0001）：每次注册必须配对 disposer（`ctx.effect` 或框架自动管理）；测试必须覆盖卸载路径
 - **waterfall 注册顺序约定**（ADR-0001）：策略（排序）先挂载，校验（否决）最后挂载
 - **配置项预算制**（ADR-0002）：新增配置项先论证"为什么不能是推断/约定/数据"；零配置必须可用
