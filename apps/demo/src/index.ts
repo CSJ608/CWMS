@@ -6,10 +6,11 @@
  * ABC overlay 配置改变决策（复杂度按需付费）→ 客户端投影只是数据。
  */
 
-import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_WORKFLOWS, TASK, type ReceiptLine } from '@cwms/contracts'
+import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_RUNTIME, PDA_WORKFLOWS, TASK, type ReceiptLine } from '@cwms/contracts'
 import { ClientRegistry, type DashboardCard, type PdaWorkflow } from '@cwms/client-registry'
 import { ledgerPlugin, Ledger } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
+import { PdaRuntime, pdaRuntimePlugin } from '@cwms/pda-runtime'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
 import { createSystem } from '@cwms/kernel'
@@ -34,6 +35,7 @@ function build() {
   system.mount(featInboundPlugin)
   system.mount(dashboardProjectionPlugin)
   system.mount(putawayZonePlugin)
+  system.mount(pdaRuntimePlugin)
   return system
 }
 
@@ -93,6 +95,35 @@ say('⑥ 任务驱动收货（opId 幂等重放）', {
     .getService<TaskService>(TASK)
     .list('putaway')
     .map((t) => `${t.id} ${t.status}${t.reason ? `（${t.reason}）` : ''}`),
+})
+
+// 7. PDA runtime：扫码会话驱动收货上架——"每次扫码 = 一次幂等推进"
+//    适配器（组合根）把采集数据绑定到领域操作；功能包零改动获得端能力。
+const pda = system.getService<PdaRuntime>(PDA_RUNTIME)
+const pdaSession = pda.start(
+  'inbound-putaway',
+  {
+    onSubmit: (collected, opId) =>
+      inbound(system).receiveViaTask(
+        { sku: String(collected.sku), lot: String(collected.lot), qty: collected.qty as number },
+        'STAGING',
+        [{ location: String(collected.location), zone: String(collected.location).split('-')[0]!, mixLotsAllowed: true }],
+        opId,
+      ),
+  },
+  'pda-boot-1',
+)
+say('⑦a PDA 会话开始，当前提示', pda.current(pdaSession.id).prompt)
+pda.submit(pdaSession.id, 'SKU-4001', 'pda-op-1')
+pda.submit(pdaSession.id, 'L20260910', 'pda-op-2')
+pda.submit(pdaSession.id, 12, 'pda-op-3')
+const pdaDone = pda.submit(pdaSession.id, 'C-03-01', 'pda-op-4')
+const totalBeforeReplay = system.getService<Ledger>(LEDGER).total()
+const pdaReplay = pda.submit(pdaSession.id, 'C-03-01', 'pda-op-4') // 模拟断网重传
+say('⑦b PDA 完成 + 断网重传', {
+  扫码结局: pdaDone.outcome,
+  重传结局一致: JSON.stringify(pdaReplay.outcome) === JSON.stringify(pdaDone.outcome),
+  重传后账本不变: system.getService<Ledger>(LEDGER).total() === totalBeforeReplay,
 })
 
 console.log('\n== 账本终态（唯一变更通道的产物） ==')

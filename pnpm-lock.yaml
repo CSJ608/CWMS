@@ -41,6 +41,9 @@ importers:
       '@cwms/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@cwms/pda-runtime':
+        specifier: workspace:*
+        version: link:../../packages/pda-runtime
       '@cwms/plugin-putaway-abc':
         specifier: workspace:*
         version: link:../../packages/plugins/putaway-abc
@@ -103,6 +106,15 @@ importers:
         version: link:../../kernel
 
   packages/kernel: {}
+
+  packages/pda-runtime:
+    dependencies:
+      '@cwms/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@cwms/kernel':
+        specifier: workspace:*
+        version: link:../kernel
 
   packages/plugins/putaway-abc:
     dependencies:

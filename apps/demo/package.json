@@ -13,6 +13,7 @@
     "@cwms/core-task": "workspace:*",
     "@cwms/feat-inbound": "workspace:*",
     "@cwms/kernel": "workspace:*",
+    "@cwms/pda-runtime": "workspace:*",
     "@cwms/plugin-putaway-abc": "workspace:*",
     "@cwms/plugin-putaway-zone": "workspace:*",
     "@cwms/plugin-veto-mixed-lot": "workspace:*"
