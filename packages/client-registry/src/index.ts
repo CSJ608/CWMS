@@ -11,12 +11,16 @@ import { definePlugin, type Plugin } from '@cwms/kernel'
 
 export type { DashboardCard, PdaWorkflow }
 
-export class ClientRegistry<T> {
+export class ClientRegistry<T extends { id: string }> {
   readonly #items = new Map<string, T>()
 
-  register(item: T & { id: string }): void {
+  register(item: T): void {
     if (this.#items.has(item.id)) throw new Error(`客户端模块 ${item.id} 重复注册`)
     this.#items.set(item.id, item)
+  }
+
+  get(id: string): T | undefined {
+    return this.#items.get(id)
   }
 
   all(): T[] {

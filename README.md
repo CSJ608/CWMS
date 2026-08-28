@@ -25,6 +25,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 | `packages/core-ledger` | 内核 | 库存账：唯一变更通道，拒绝负库存，守护账实守恒 |
 | `packages/core-task` | 内核 | 任务机：显式迁移表 + opId 幂等推进（PDA 弱网重试安全），领域无关 |
 | `packages/client-registry` | 内核 | 客户端模块注册表：client 半身是数据描述符，不是页面 |
+| `packages/pda-runtime` | 端基建 | 通用扫码工作流引擎：消费描述符驱动推进，opId 幂等，绑定在组合根 |
 | `packages/plugins/putaway-zone` | 策略 | 区域优先级上架（缺省提供者，零配置可用） |
 | `packages/plugins/putaway-abc` | 策略 | ABC 动碰分级（可选提供者，配置驱动） |
 | `packages/plugins/veto-mixed-lot` | 校验 | 混放否决（waterfall 短路即一票否决） |
@@ -58,6 +59,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 - [ADR-0003 包拓扑：纵切片，按角色拆缝](docs/adr/0003-包拓扑-纵切片按角色拆缝.md)
 - [ADR-0004 三端投影：PC/PDA/大屏是同一领域的三种函数](docs/adr/0004-三端投影.md)
 - [ADR-0005 任务机内核：显式迁移表与 opId 幂等推进](docs/adr/0005-任务机内核-迁移表与幂等推进.md)
+- [ADR-0006 端 runtime：通用工作流引擎与组合根绑定](docs/adr/0006-端runtime-通用工作流引擎与组合根绑定.md)
 
 理念出处与新会话按需阅读地图见[参考资料索引](docs/references.md)。
 
