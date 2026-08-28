@@ -42,6 +42,8 @@ export interface LedgerChanged {
   lot: string
   qty: number
   location: string
+  /** 仅 move：移出库位。事件流守恒的依据——重放可重建账本（ADR-0011）。 */
+  from?: string
 }
 
 // ---- 上架策略缝（waterfall：包装与短路即决策）----
