@@ -6,6 +6,8 @@
 
 ### 已完成
 
+- 全流程门禁首次演练（PR #6，MIT 许可证）：分支 → 本地门禁 → PR → CI 双检（标题规范+类型测试）→ squash 合并 → main CI 绿。约定已写入 CONTRIBUTING：代码/契约/配置变更走 PR；交接快照可直接提交。
+
 - 仓库骨架：pnpm monorepo + TS（module ESNext + Bundler resolution），vitest，9 包
 - 内核 `@cwms/kernel`：provide/getService、inject 校验、LIFO 副作用回滚、级联卸载、依赖图清理、emit/waterfall（短路语义）、reload
 - 契约 `@cwms/contracts`：领域类型、服务 key、事件契约（声明合并）、客户端描述符

@@ -3,7 +3,8 @@
 ## 分支与提交
 
 - `main` 保持绿色：`pnpm typecheck && pnpm test` 通过才允许合并
-- 功能开发用分支：`feat/<主题>`、`fix/<主题>`、`docs/<主题>`
+- **代码、契约、配置面变更走 PR 门禁**：分支 → PR → CI 绿 → squash 合并（PR 标题即 Conventional Commits）
+- 交接快照（`docs/methodology/_handoff.md`）等过程文档可直接提交 main
 - 提交信息：Conventional Commits + 中文描述，例如
   - `feat(kernel): 服务卸载时清理依赖图`
   - `docs(adr): 起草配置分层修订`
