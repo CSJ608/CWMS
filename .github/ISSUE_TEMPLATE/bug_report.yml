@@ -1,0 +1,33 @@
+name: 缺陷报告
+description: 行为与预期不符
+labels: ['bug']
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么
+      description: 期望行为 vs 实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. pnpm demo
+        2. …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 领域
+      options:
+        - kernel（内核机制）
+        - core-ledger（库存账）
+        - 缝/插件（策略与校验）
+        - feat-inbound（纵切片）
+        - 客户端投影
+        - 工程设施（CI/文档/协作）
+    validations:
+      required: true

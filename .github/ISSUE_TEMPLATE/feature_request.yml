@@ -1,0 +1,35 @@
+name: 功能 / 探索提案
+description: 新能力、新缝、新协作实验
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: why
+    attributes:
+      label: 要解决什么问题
+      description: 从场景出发，不要从实现出发；若与 ADR 相关请引用编号
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 设想的做法
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: 缝的准入五问（ADR-0001，仅在提案新增缝时勾选）
+      options:
+        - label: 有多种真实实现（现在或可预见）
+        - label: 接缝比实现稳定
+        - label: 故障可以隔离
+        - label: 生命周期可拥有（装/卸/可逆）
+        - label: 核心无需知道实现细节
+  - type: dropdown
+    id: pillar
+    attributes:
+      label: 属于哪个探索支柱
+      options:
+        - 开发理念（插件化/架构）
+        - 工程管理（流程/质量/CI）
+        - 人机协作（AI 工作流/自动化）
+    validations:
+      required: true

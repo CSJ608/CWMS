@@ -1,0 +1,22 @@
+name: 架构决策提案（ADR）
+description: 影响拓扑、契约、配置面或内核语义的决策
+labels: ['adr']
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景与驱动力
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: 提议的决策
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: 后果（正负都要写）
+    validations:
+      required: true

@@ -1,0 +1,9 @@
+name: 其他
+description: 讨论、提问、协作实验记录
+body:
+  - type: textarea
+    id: body
+    attributes:
+      label: 内容
+    validations:
+      required: true
