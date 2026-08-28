@@ -32,6 +32,9 @@ importers:
       '@cwms/core-ledger':
         specifier: workspace:*
         version: link:../../packages/core-ledger
+      '@cwms/core-task':
+        specifier: workspace:*
+        version: link:../../packages/core-task
       '@cwms/feat-inbound':
         specifier: workspace:*
         version: link:../../packages/features/feat-inbound
@@ -72,6 +75,15 @@ importers:
         specifier: workspace:*
         version: link:../kernel
 
+  packages/core-task:
+    dependencies:
+      '@cwms/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@cwms/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+
   packages/features/feat-inbound:
     dependencies:
       '@cwms/client-registry':
@@ -83,6 +95,9 @@ importers:
       '@cwms/core-ledger':
         specifier: workspace:*
         version: link:../../core-ledger
+      '@cwms/core-task':
+        specifier: workspace:*
+        version: link:../../core-task
       '@cwms/kernel':
         specifier: workspace:*
         version: link:../../kernel

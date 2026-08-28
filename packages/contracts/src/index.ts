@@ -12,6 +12,7 @@
 
 export const LEDGER = 'ledger'
 export const INBOUND = 'inbound'
+export const TASK = 'task'
 export const PDA_WORKFLOWS = 'pda/workflows'
 export const DASHBOARD_CARDS = 'dashboard/cards'
 
@@ -59,6 +60,28 @@ export interface PutawayRequest {
   decision: PutawayDecision
 }
 
+// ---- 任务机（内核封闭清单成员，ADR-0005：迁移表 + opId 幂等推进）----
+
+export type TaskStatus = 'created' | 'assigned' | 'executing' | 'completed' | 'cancelled'
+
+export interface TaskSnapshot {
+  id: string
+  kind: string
+  status: TaskStatus
+  worker?: string
+  reason?: string
+  createdAt: number
+}
+
+export interface TaskChanged {
+  taskId: string
+  kind: string
+  /** 'void' 表示任务被创建 */
+  from: TaskStatus | 'void'
+  to: TaskStatus
+  opId: string
+}
+
 // ---- 客户端投影描述符（client 半身是数据，不是页面）----
 
 export interface PdaWorkflowStep {
@@ -84,6 +107,7 @@ export interface DashboardCard {
 declare module '@cwms/kernel' {
   interface EmitEvents {
     'ledger/changed': LedgerChanged
+    'task/changed': TaskChanged
   }
   interface WaterfallEvents {
     'putaway/decide': PutawayRequest

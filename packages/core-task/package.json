@@ -1,5 +1,5 @@
 {
-  "name": "@cwms/feat-inbound",
+  "name": "@cwms/core-task",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,10 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@cwms/client-registry": "workspace:*",
     "@cwms/contracts": "workspace:*",
-    "@cwms/core-ledger": "workspace:*",
-    "@cwms/core-task": "workspace:*",
     "@cwms/kernel": "workspace:*"
   }
 }

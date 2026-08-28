@@ -16,6 +16,7 @@
       "@cwms/kernel": ["packages/kernel/src/index.ts"],
       "@cwms/contracts": ["packages/contracts/src/index.ts"],
       "@cwms/core-ledger": ["packages/core-ledger/src/index.ts"],
+      "@cwms/core-task": ["packages/core-task/src/index.ts"],
       "@cwms/client-registry": ["packages/client-registry/src/index.ts"],
       "@cwms/plugin-putaway-zone": ["packages/plugins/putaway-zone/src/index.ts"],
       "@cwms/plugin-putaway-abc": ["packages/plugins/putaway-abc/src/index.ts"],
