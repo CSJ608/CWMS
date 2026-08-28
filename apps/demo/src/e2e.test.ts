@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { INBOUND, LEDGER, PDA_RUNTIME, TASK } from '@cwms/contracts'
+import { INBOUND, LEDGER, PDA_RUNTIME, PC_RUNTIME, TASK } from '@cwms/contracts'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { Ledger, ledgerPlugin } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
 import { PdaRuntime, pdaRuntimePlugin } from '@cwms/pda-runtime'
-import { createSystem } from '@cwms/kernel'
+import { PcRuntime, pcRuntimePlugin } from '@cwms/pc-runtime'
+import { createSystem, definePlugin } from '@cwms/kernel'
 import { putawayZonePlugin } from '@cwms/plugin-putaway-zone'
 import { vetoMixedLotPlugin } from '@cwms/plugin-veto-mixed-lot'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
@@ -19,6 +20,7 @@ function build(withVeto = false) {
   system.mount(putawayZonePlugin)
   if (withVeto) system.mount(vetoMixedLotPlugin)
   system.mount(pdaRuntimePlugin)
+  system.mount(pcRuntimePlugin)
   return system
 }
 
@@ -92,5 +94,26 @@ describe('端到端：PDA 扫码 → runtime → 任务机 → 策略缝 → 账
     const ledger = system.getService<Ledger>(LEDGER)
     expect(ledger.find('STAGING', 'S1', 'L2')?.qty).toBe(3)
     expect(system.getService<TaskService>(TASK).list('putaway', 'cancelled')).toHaveLength(1)
+  })
+
+  it('一次领域操作，三端投影同步：PDA 驱动、PC 呈现、大屏计数', () => {
+    const system = build(true)
+    const { pda, session } = bootPda(system)
+    pda.submit(session.id, 'SKU-7001', 'op-1')
+    pda.submit(session.id, 'L7', 'op-2')
+    pda.submit(session.id, 4, 'op-3')
+    pda.submit(session.id, 'C-03-01', 'op-4') // C 区混放允许，上架成功
+
+    const pc = system.getService<PcRuntime>(PC_RUNTIME)
+    pc.bindProvider('inventory', () =>
+      system.getService<Ledger>(LEDGER).snapshot().map((line) => ({ ...line })),
+    )
+    const view = pc.query('inventory')
+    expect(view.title).toBe('库存一览')
+    expect(view.columns.map((c) => c.key)).toEqual(['location', 'sku', 'lot', 'qty'])
+    expect(view.rows).toContainEqual({ location: 'C-03-01', sku: 'SKU-7001', lot: 'L7', qty: 4 })
+
+    const readModel = system.getService<{ todayInboundQty: number }>('dashboard/read-model')
+    expect(readModel.todayInboundQty).toBeGreaterThanOrEqual(4)
   })
 })

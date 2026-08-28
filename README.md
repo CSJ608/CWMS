@@ -26,6 +26,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 | `packages/core-task` | 内核 | 任务机：显式迁移表 + opId 幂等推进（PDA 弱网重试安全），领域无关 |
 | `packages/client-registry` | 内核 | 客户端模块注册表：client 半身是数据描述符，不是页面 |
 | `packages/pda-runtime` | 端基建 | 通用扫码工作流引擎：消费描述符驱动推进，opId 幂等，绑定在组合根 |
+| `packages/pc-runtime` | 端基建 | 表格投影引擎：消费 PcTable 描述符 + 组合根绑定数据源，query() 出渲染形状 |
 | `packages/plugins/putaway-zone` | 策略 | 区域优先级上架（缺省提供者，零配置可用） |
 | `packages/plugins/putaway-abc` | 策略 | ABC 动碰分级（可选提供者，配置驱动） |
 | `packages/plugins/veto-mixed-lot` | 校验 | 混放否决（waterfall 短路即一票否决） |
@@ -62,6 +63,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 - [ADR-0006 端 runtime：通用工作流引擎与组合根绑定](docs/adr/0006-端runtime-通用工作流引擎与组合根绑定.md)
 - [ADR-0007 配置 schema 与 overlay 合并语义](docs/adr/0007-配置schema与overlay合并语义.md)
 - [ADR-0008 依赖方向守卫与服务接口住在契约包](docs/adr/0008-依赖方向守卫与服务接口住在契约包.md)
+- [ADR-0009 PC 投影：表格描述符与查询绑定](docs/adr/0009-PC投影-表格描述符与查询绑定.md)
 
 理念出处与新会话按需阅读地图见[参考资料索引](docs/references.md)。
 

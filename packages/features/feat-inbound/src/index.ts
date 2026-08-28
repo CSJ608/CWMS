@@ -11,12 +11,14 @@ import {
   INBOUND,
   LEDGER,
   PDA_WORKFLOWS,
+  PC_TABLES,
   TASK,
   type DashboardCard,
   type InventoryLedger,
   type ModuleRegistry,
   type PutawayRequest,
   type PdaWorkflow,
+  type PcTable,
   type ReceiptLine,
   type TaskDetail,
   type TaskServiceView,
@@ -91,7 +93,7 @@ export class InboundService {
 
 export const featInboundPlugin: Plugin = definePlugin({
   name: 'feat-inbound',
-  inject: [LEDGER, TASK, PDA_WORKFLOWS, DASHBOARD_CARDS],
+  inject: [LEDGER, TASK, PDA_WORKFLOWS, DASHBOARD_CARDS, PC_TABLES],
   apply(ctx) {
     const ledger = ctx.getService<InventoryLedger>(LEDGER)
     const tasks = ctx.getService<TaskServiceView>(TASK)
@@ -113,6 +115,18 @@ export const featInboundPlugin: Plugin = definePlugin({
       id: 'inbound-rate',
       title: '今日入库量',
       metric: 'todayInboundQty',
+    })
+
+    // client 半身：PC 端收到的是一份表格描述符（数据驱动，ADR-0009）
+    ctx.getService<ModuleRegistry<PcTable>>(PC_TABLES).register({
+      id: 'inventory',
+      title: '库存一览',
+      columns: [
+        { key: 'location', title: '库位' },
+        { key: 'sku', title: 'SKU' },
+        { key: 'lot', title: '批次' },
+        { key: 'qty', title: '数量' },
+      ],
     })
   },
 })

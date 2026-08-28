@@ -41,6 +41,9 @@ importers:
       '@cwms/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@cwms/pc-runtime':
+        specifier: workspace:*
+        version: link:../../packages/pc-runtime
       '@cwms/pda-runtime':
         specifier: workspace:*
         version: link:../../packages/pda-runtime
@@ -97,6 +100,15 @@ importers:
         version: link:../../kernel
 
   packages/kernel: {}
+
+  packages/pc-runtime:
+    dependencies:
+      '@cwms/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@cwms/kernel':
+        specifier: workspace:*
+        version: link:../kernel
 
   packages/pda-runtime:
     dependencies:

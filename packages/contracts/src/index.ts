@@ -15,6 +15,8 @@ export const INBOUND = 'inbound'
 export const TASK = 'task'
 export const PDA_WORKFLOWS = 'pda/workflows'
 export const PDA_RUNTIME = 'pda/runtime'
+export const PC_TABLES = 'pc/tables'
+export const PC_RUNTIME = 'pc/runtime'
 export const DASHBOARD_CARDS = 'dashboard/cards'
 
 // ---- 领域最小模型 ----
@@ -101,6 +103,20 @@ export interface DashboardCard {
   id: string
   title: string
   metric: 'todayInboundQty' | 'stockTotalQty'
+}
+
+// ---- PC 投影描述符（ADR-0004：PC 交互是数据的函数）----
+
+export interface PcColumn {
+  key: string
+  title: string
+}
+
+/** PC 表格描述符：纯数据，不含任何 UI 代码；行数据由组合根绑定。 */
+export interface PcTable {
+  id: string
+  title: string
+  columns: PcColumn[]
 }
 
 // ---- 服务契约：实现住在各包，接口住在契约包（ADR-0008）----
