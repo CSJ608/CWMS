@@ -1,0 +1,13 @@
+{
+  "name": "@cwms/plugin-putaway-abc",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cwms/contracts": "workspace:*",
+    "@cwms/kernel": "workspace:*"
+  }
+}
