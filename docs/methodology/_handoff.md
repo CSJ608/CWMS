@@ -15,7 +15,8 @@
 - 演示 `apps/demo`：五幕叙事全部跑通（含"策略先注册、校验后注册"顺序约定）
 - 验证：typecheck 绿，19/19 测试绿
 - 文档：ADR-0001~0004、README、CONTRIBUTING、AGENTS.md
-- GitHub：私有仓库 CSJ608/CWMS，CI、issue/PR 模板、labels、milestone、project、分支保护
+- GitHub：私有仓库 CSJ608/CWMS，CI 绿、issue/PR 模板、labels、milestone、issues #1~#5
+- 待用户侧动作：① project 看板需先 `gh auth refresh -s project,read:project`；② 私有仓库分支保护需 GitHub Pro（或转公开）
 
 ### 下一步（按优先级）
 
