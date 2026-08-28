@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@cwms/kernel": ["packages/kernel/src/index.ts"],
+      "@cwms/contracts": ["packages/contracts/src/index.ts"],
+      "@cwms/core-ledger": ["packages/core-ledger/src/index.ts"],
+      "@cwms/client-registry": ["packages/client-registry/src/index.ts"],
+      "@cwms/plugin-putaway-zone": ["packages/plugins/putaway-zone/src/index.ts"],
+      "@cwms/plugin-putaway-abc": ["packages/plugins/putaway-abc/src/index.ts"],
+      "@cwms/plugin-veto-mixed-lot": ["packages/plugins/veto-mixed-lot/src/index.ts"],
+      "@cwms/feat-inbound": ["packages/features/feat-inbound/src/index.ts"]
+    }
+  },
+  "include": ["packages/**/*.ts", "apps/**/*.ts", "vitest.config.ts"]
+}
