@@ -11,6 +11,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "check:deps": "node scripts/check-deps.mjs",
     "demo": "tsx apps/demo/src/index.ts"
   },
   "devDependencies": {
