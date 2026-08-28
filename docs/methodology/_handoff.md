@@ -20,7 +20,7 @@
 
 ### 下一步（按优先级）
 
-1. **大屏投影补全**（三端的最后一段）：task/changed 事件驱动的作业看板读模型 + dashboard-runtime 供卡片指标（复用 pc/pda 已确立的模式）
-2. 探索：GitHub MCP 接入 ZCode（issue #5），验证 AI 闭环管理 issue/PR/看板——需要用户在 ZCode 配置一次 MCP server
+1. **GitHub MCP 验收剧本**（issue #5，环境已就绪待验证）：MCP 已配置（官方 github-mcp-server v1.11.0 本机二进制 + 复用 gh CLI 凭据，写入用户配置 `~/.zcode/cli/config.json`）。新会话先确认 Settings → MCP 中 github 已连接；然后一次会话内完成「领 issue → 实现 → PR → CI 绿 → 合并 → 关 issue → 看板归档」，**全程用 MCP 工具而非 shell 的 gh 命令**，人只做评审。
+2. **大屏投影补全**（三端最后一段）：task/changed 事件驱动的作业看板读模型 + dashboard-runtime 供卡片指标（复用已确立模式）
 3. 持久化缝预热：core-ledger 存储接口设计（内存实现已稳，第二个实现出现时拆缝）
-4. 真实感增强：PC 表格加过滤/排序描述符字段（等真实需求，勿预设计）
+4. PC 表格过滤/排序描述符字段（等真实需求，勿预设计）
