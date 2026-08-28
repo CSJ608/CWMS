@@ -90,6 +90,15 @@ importers:
         specifier: workspace:*
         version: link:../kernel
 
+  packages/dashboard-runtime:
+    dependencies:
+      '@cwms/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@cwms/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+
   packages/features/feat-inbound:
     dependencies:
       '@cwms/contracts':

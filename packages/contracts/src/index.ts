@@ -18,6 +18,8 @@ export const PDA_RUNTIME = 'pda/runtime'
 export const PC_TABLES = 'pc/tables'
 export const PC_RUNTIME = 'pc/runtime'
 export const DASHBOARD_CARDS = 'dashboard/cards'
+export const DASHBOARD_RUNTIME = 'dashboard/runtime'
+export const DASHBOARD_BOARD = 'dashboard/board'
 
 // ---- 领域最小模型 ----
 

@@ -7,6 +7,7 @@
  *   packages/contracts         （契约词汇表）    → 只准 @cwms/kernel
  *   packages/core-*            （内核基础设施）  → 只准 contracts + kernel
  *   packages/plugins/*         （策略与校验缝）  → 只准 contracts + kernel
+ *   packages/*-runtime、client-registry（端基建）→ 只准 contracts + kernel
  *   packages/features/*        （功能纵切片）    → 只准 contracts + kernel
  *   apps/*                     （组合根）        → 豁免（组装系统是它的职责）
  *
@@ -39,6 +40,7 @@ function roleOf(relDir) {
   if (relDir === 'packages/contracts') return 'contracts'
   if (/^packages\/core-/.test(relDir)) return 'core'
   if (/^packages\/(plugins|features)\//.test(relDir)) return 'plugin'
+  if (/^packages\/(client-registry|pda-runtime|pc-runtime|dashboard-runtime)$/.test(relDir)) return 'runtime'
   if (/^apps\//.test(relDir)) return 'app'
   return null
 }
@@ -46,7 +48,7 @@ function roleOf(relDir) {
 function allowedDeps(role) {
   if (role === 'kernel') return new Set()
   if (role === 'contracts') return new Set(['@cwms/kernel'])
-  if (role === 'core' || role === 'plugin') return ALLOW_BASE
+  if (role === 'core' || role === 'plugin' || role === 'runtime') return ALLOW_BASE
   return null // app：豁免
 }
 
