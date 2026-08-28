@@ -42,4 +42,42 @@ describe('库存账：唯一变更通道', () => {
     ledger.receive(line(2, 'L1'), 'B-01')
     expect(ledger.linesAt('A-01')).toHaveLength(2)
   })
+
+  it('move 事件携带移出库位：事件流按守恒语义可重放重建账本（ADR-0011 前置条件）', () => {
+    const ledger = new Ledger()
+    const events: import('@cwms/contracts').LedgerChanged[] = []
+    ledger.bind((change) => events.push(change))
+
+    ledger.receive(line(10), 'STAGING')
+    ledger.move(line(6), 'STAGING', 'A-01')
+    ledger.ship(line(2), 'A-01')
+    ledger.receive(line(4, 'L2'), 'C-01')
+    ledger.move(line(4, 'L2'), 'C-01', 'A-01')
+
+    expect(events.filter((e) => e.kind === 'move')).toMatchObject([
+      { from: 'STAGING', location: 'A-01' },
+      { from: 'C-01', location: 'A-01' },
+    ])
+
+    // 重放语义：receive +qty@location；ship -qty@location；move -qty@from +qty@location
+    const replayed = new Map<string, number>()
+    for (const e of events) {
+      const apply = (location: string, delta: number) => {
+        const k = `${location}|${e.sku}|${e.lot}`
+        const next = (replayed.get(k) ?? 0) + delta
+        if (next === 0) replayed.delete(k)
+        else replayed.set(k, next)
+      }
+      if (e.kind === 'receive') apply(e.location, +e.qty)
+      else if (e.kind === 'ship') apply(e.location, -e.qty)
+      else {
+        apply(e.from!, -e.qty)
+        apply(e.location, +e.qty)
+      }
+    }
+    const expected = new Map(
+      ledger.snapshot().map((s) => [`${s.location}|${s.sku}|${s.lot}`, s.qty] as const),
+    )
+    expect(replayed).toEqual(expected)
+  })
 })

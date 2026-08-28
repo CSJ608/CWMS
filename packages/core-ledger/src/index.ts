@@ -52,7 +52,9 @@ export class Ledger implements InventoryLedger {
     const existingTo = this.#stocks.get(kTo)
     const nextTo = (existingTo?.qty ?? 0) + line.qty
     this.#stocks.set(kTo, { location: to, sku: line.sku, lot: line.lot, qty: nextTo })
-    this.#emit?.({ kind: 'move', sku: line.sku, lot: line.lot, qty: line.qty, location: to })
+    // 事件携带移出侧（from）与移入侧（location）——收/发/移的事件流按守恒语义
+    // 可完整重放重建账本（ADR-0011），这是事件流可作为审计与持久化格式的资格。
+    this.#emit?.({ kind: 'move', sku: line.sku, lot: line.lot, qty: line.qty, location: to, from })
   }
 
   linesAt(location: string): StockLine[] {
