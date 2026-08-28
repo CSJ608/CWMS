@@ -1,5 +1,7 @@
 # CWMS
 
+[![CI](https://github.com/CSJ608/CWMS/actions/workflows/ci.yml/badge.svg)](https://github.com/CSJ608/CWMS/actions/workflows/ci.yml)
+
 > 一切皆插件的 WMS 试验田。语言只是工具，这里的产出是**理念、工程方法、人机协作方式**。
 
 CWMS 探索三件事：
@@ -76,4 +78,3 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 ## 许可证
 
 [MIT](LICENSE)
-
