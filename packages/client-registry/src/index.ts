@@ -9,13 +9,15 @@
 import {
   DASHBOARD_CARDS,
   PDA_WORKFLOWS,
+  PC_TABLES,
   type DashboardCard,
   type ModuleRegistry,
+  type PcTable,
   type PdaWorkflow,
 } from '@cwms/contracts'
 import { definePlugin, type Plugin } from '@cwms/kernel'
 
-export type { DashboardCard, PdaWorkflow }
+export type { DashboardCard, PdaWorkflow, PcTable }
 
 export class ClientRegistry<T extends { id: string }> implements ModuleRegistry<T> {
   readonly #items = new Map<string, T>()
@@ -38,6 +40,7 @@ export const clientRegistryPlugin: Plugin = definePlugin({
   name: 'client-registry',
   apply(ctx) {
     ctx.provide(PDA_WORKFLOWS, new ClientRegistry<PdaWorkflow>())
+    ctx.provide(PC_TABLES, new ClientRegistry<PcTable>())
     ctx.provide(DASHBOARD_CARDS, new ClientRegistry<DashboardCard>())
   },
 })
