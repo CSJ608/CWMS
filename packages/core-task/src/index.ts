@@ -12,7 +12,14 @@
  *   不重复执行、不重复发事件；opId 跨任务复用立即报错。
  */
 
-import { TASK, type TaskChanged, type TaskSnapshot, type TaskStatus } from '@cwms/contracts'
+import {
+  TASK,
+  type TaskChanged,
+  type TaskDetail,
+  type TaskServiceView,
+  type TaskSnapshot,
+  type TaskStatus,
+} from '@cwms/contracts'
 import { definePlugin, type Plugin } from '@cwms/kernel'
 
 const TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
@@ -21,11 +28,6 @@ const TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
   executing: ['completed', 'cancelled'],
   completed: [],
   cancelled: [],
-}
-
-export interface TaskDetail extends TaskSnapshot {
-  payload: unknown
-  result?: unknown
 }
 
 interface TaskRecord {
@@ -41,7 +43,7 @@ interface TaskRecord {
   ops: Map<string, TaskSnapshot>
 }
 
-export class TaskService {
+export class TaskService implements TaskServiceView {
   readonly #tasks = new Map<string, TaskRecord>()
   readonly #opIndex = new Map<string, { taskId: string; snapshot: TaskSnapshot }>()
   #seq = 0

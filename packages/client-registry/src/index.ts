@@ -6,12 +6,18 @@
  * 各端 runtime 消费这些描述符——功能包永远不需要知道端的细节。
  */
 
-import { DASHBOARD_CARDS, PDA_WORKFLOWS, type DashboardCard, type PdaWorkflow } from '@cwms/contracts'
+import {
+  DASHBOARD_CARDS,
+  PDA_WORKFLOWS,
+  type DashboardCard,
+  type ModuleRegistry,
+  type PdaWorkflow,
+} from '@cwms/contracts'
 import { definePlugin, type Plugin } from '@cwms/kernel'
 
 export type { DashboardCard, PdaWorkflow }
 
-export class ClientRegistry<T extends { id: string }> {
+export class ClientRegistry<T extends { id: string }> implements ModuleRegistry<T> {
   readonly #items = new Map<string, T>()
 
   register(item: T): void {

@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@cwms/contracts": "workspace:*",
-    "@cwms/core-ledger": "workspace:*",
     "@cwms/kernel": "workspace:*"
   }
 }

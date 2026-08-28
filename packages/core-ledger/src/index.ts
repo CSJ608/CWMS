@@ -6,12 +6,12 @@
  * ledger/changed 事件供投影订阅，账实可追溯。
  */
 
-import { LEDGER, type LedgerChanged, type ReceiptLine, type StockLine } from '@cwms/contracts'
+import { LEDGER, type InventoryLedger, type LedgerChanged, type ReceiptLine, type StockLine } from '@cwms/contracts'
 import { definePlugin, type Plugin } from '@cwms/kernel'
 
 const key = (location: string, sku: string, lot: string) => `${location}|${sku}|${lot}`
 
-export class Ledger {
+export class Ledger implements InventoryLedger {
   readonly #stocks = new Map<string, StockLine>()
   #emit: ((change: LedgerChanged) => void) | null = null
 

@@ -13,13 +13,14 @@ import {
   PDA_WORKFLOWS,
   TASK,
   type DashboardCard,
+  type InventoryLedger,
+  type ModuleRegistry,
   type PutawayRequest,
   type PdaWorkflow,
   type ReceiptLine,
+  type TaskDetail,
+  type TaskServiceView,
 } from '@cwms/contracts'
-import { ClientRegistry } from '@cwms/client-registry'
-import { Ledger } from '@cwms/core-ledger'
-import { TaskService, type TaskDetail } from '@cwms/core-task'
 import { definePlugin, type Context, type Plugin } from '@cwms/kernel'
 
 export type PutawayOutcome =
@@ -28,8 +29,8 @@ export type PutawayOutcome =
 
 export class InboundService {
   constructor(
-    private readonly ledger: Ledger,
-    private readonly tasks: TaskService,
+    private readonly ledger: InventoryLedger,
+    private readonly tasks: TaskServiceView,
     private readonly ctx: Context,
   ) {}
 
@@ -92,12 +93,12 @@ export const featInboundPlugin: Plugin = definePlugin({
   name: 'feat-inbound',
   inject: [LEDGER, TASK, PDA_WORKFLOWS, DASHBOARD_CARDS],
   apply(ctx) {
-    const ledger = ctx.getService<Ledger>(LEDGER)
-    const tasks = ctx.getService<TaskService>(TASK)
+    const ledger = ctx.getService<InventoryLedger>(LEDGER)
+    const tasks = ctx.getService<TaskServiceView>(TASK)
     ctx.provide(INBOUND, new InboundService(ledger, tasks, ctx))
 
     // client 半身：PDA 端收到的是一份工作流定义（任务驱动，ADR-0004）
-    ctx.getService<ClientRegistry<PdaWorkflow>>(PDA_WORKFLOWS).register({
+    ctx.getService<ModuleRegistry<PdaWorkflow>>(PDA_WORKFLOWS).register({
       id: 'inbound-putaway',
       title: '收货上架',
       steps: [
@@ -106,9 +107,9 @@ export const featInboundPlugin: Plugin = definePlugin({
         { action: '输入数量', input: 'qty' },
         { action: '扫描目标库位完成上架', scan: 'location' },
       ],
-    } as PdaWorkflow)
+    })
 
-    ctx.getService<ClientRegistry<DashboardCard>>(DASHBOARD_CARDS).register({
+    ctx.getService<ModuleRegistry<DashboardCard>>(DASHBOARD_CARDS).register({
       id: 'inbound-rate',
       title: '今日入库量',
       metric: 'todayInboundQty',
