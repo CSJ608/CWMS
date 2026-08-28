@@ -126,5 +126,26 @@ say('⑦b PDA 完成 + 断网重传', {
   重传后账本不变: system.getService<Ledger>(LEDGER).total() === totalBeforeReplay,
 })
 
+// 8. 配置 schema（ADR-0007）：深合并 overlay——冷链仓只加 S 区优先级，不抄全表
+system.reload(putawayZonePlugin, { zonePriority: { S: 0 } })
+const cold = inbound(system).receiveViaTask(
+  { sku: 'SKU-5001', lot: 'L20261001', qty: 6 },
+  'STAGING',
+  [
+    { location: 'A-01-01', zone: 'A' },
+    { location: 'S-01-01', zone: 'S' },
+  ],
+  'op-cold',
+)
+say('⑧ 深合并 overlay：新增 S 区置顶（缺省表保留 A/B/C）', cold)
+
+// 8b. 配置预算制：拼错的配置项大声报错，且原子 reload——旧配置保持在岗
+const bad: Record<string, unknown> = { zonePriorty: { S: 0 } }
+try {
+  system.reload(putawayZonePlugin, bad as never)
+} catch (error) {
+  say('⑧b 未知配置项被拒绝（旧实例仍在岗）', (error as Error).message)
+}
+
 console.log('\n== 账本终态（唯一变更通道的产物） ==')
 console.log(JSON.stringify(system.getService<Ledger>(LEDGER).snapshot(), null, 2))
