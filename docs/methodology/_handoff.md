@@ -20,7 +20,7 @@
 
 ### 下一步（按优先级）
 
-1. **GitHub MCP 验收剧本**（issue #5，环境已就绪待验证）：MCP 已配置（官方 github-mcp-server v1.11.0 本机二进制 + 复用 gh CLI 凭据，写入用户配置 `~/.zcode/cli/config.json`）。新会话先确认 Settings → MCP 中 github 已连接；然后一次会话内完成「领 issue → 实现 → PR → CI 绿 → 合并 → 关 issue → 看板归档」，**全程用 MCP 工具而非 shell 的 gh 命令**，人只做评审。
+1. **GitHub MCP 验收剧本**（issue #5，环境已连）：MCP 已连接（官方 github-mcp-server v1.11.0，凭据在用户配置）。**必须开新会话执行**（MCP 工具随会话启动注入）——开场先清点 github 工具是否可用，然后严格按 issue #5 评论区的《验收剧本》七步闭环执行配套任务 issue #14（README CI 徽章）。判定：七步全用 MCP 工具、shell gh 零使用、人只评审；任何一步退回 shell 即验收失败，如实记录。
 2. **大屏投影补全**（三端最后一段）：task/changed 事件驱动的作业看板读模型 + dashboard-runtime 供卡片指标（复用已确立模式）
 3. 持久化缝预热：core-ledger 存储接口设计（内存实现已稳，第二个实现出现时拆缝）
 4. PC 表格过滤/排序描述符字段（等真实需求，勿预设计）
