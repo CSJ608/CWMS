@@ -5,11 +5,14 @@ import {
   INBOUND,
   LEDGER,
   PDA_WORKFLOWS,
+  TASK,
   type DashboardCard,
   type PdaWorkflow,
+  type TaskChanged,
 } from '@cwms/contracts'
 import { Ledger, ledgerPlugin } from '@cwms/core-ledger'
-import { createSystem } from '@cwms/kernel'
+import { coreTaskPlugin, TaskService } from '@cwms/core-task'
+import { createSystem, definePlugin } from '@cwms/kernel'
 import { putawayAbcPlugin } from '@cwms/plugin-putaway-abc'
 import { putawayZonePlugin } from '@cwms/plugin-putaway-zone'
 import { vetoMixedLotPlugin } from '@cwms/plugin-veto-mixed-lot'
@@ -25,6 +28,7 @@ function build() {
   const system = createSystem()
   system.mount(clientRegistryPlugin)
   system.mount(ledgerPlugin)
+  system.mount(coreTaskPlugin)
   system.mount(featInboundPlugin)
   system.mount(dashboardProjectionPlugin)
   system.mount(putawayZonePlugin)
@@ -94,5 +98,55 @@ describe('收货纵切片：一切皆插件的端到端证明', () => {
     expect(readModel.todayInboundQty).toBe(14)
     system.unmount('projection-dashboard')
     expect(system.isMounted('projection-dashboard')).toBe(false)
+  })
+})
+
+describe('任务驱动的收货上架（core-task 集成，ADR-0005）', () => {
+  it('完整生命周期驱动上架，task/changed 轨迹可查', () => {
+    const system = build()
+    const events: TaskChanged[] = []
+    system.mount(
+      definePlugin({
+        name: 'probe',
+        apply: (ctx) => ctx.on('task/changed', (change) => events.push(change)),
+      }),
+    )
+    const result = inbound(system).receiveViaTask({ sku: 'S1', lot: 'L1', qty: 6 }, 'STAGING', CANDIDATES, 'op-A')
+    expect(result).toMatchObject({ blocked: false, location: 'A-01-01' })
+    expect(events.map((e) => `${e.from}→${e.to}`)).toEqual([
+      'void→created',
+      'created→assigned',
+      'assigned→executing',
+      'executing→completed',
+    ])
+    expect(system.getService<TaskService>(TASK).list('putaway', 'completed')).toHaveLength(1)
+  })
+
+  it('同 opId 重放：结局相同、账本不变——PDA 弱网重试安全', () => {
+    const system = build()
+    const line = { sku: 'S2', lot: 'L1', qty: 6 }
+    const first = inbound(system).receiveViaTask(line, 'STAGING', CANDIDATES, 'op-B')
+    const totalAfterFirst = system.getService<Ledger>(LEDGER).total()
+    const replay = inbound(system).receiveViaTask(line, 'STAGING', CANDIDATES, 'op-B')
+    expect(replay).toEqual(first)
+    expect(system.getService<Ledger>(LEDGER).total()).toBe(totalAfterFirst)
+    expect(system.getService<TaskService>(TASK).list()).toHaveLength(1)
+  })
+
+  it('决策被否决：任务取消并记录原因，货留暂存账上可查', () => {
+    const system = build()
+    system.mount(vetoMixedLotPlugin)
+    inbound(system).receiveViaTask({ sku: 'S1', lot: 'L1', qty: 5 }, 'STAGING', CANDIDATES.slice(0, 2), 'op-C')
+    const blocked = inbound(system).receiveViaTask(
+      { sku: 'S1', lot: 'L2', qty: 3 },
+      'STAGING',
+      CANDIDATES.slice(0, 2),
+      'op-D',
+    )
+    expect(blocked.blocked).toBe(true)
+    const cancelled = system.getService<TaskService>(TASK).list('putaway', 'cancelled')
+    expect(cancelled).toHaveLength(1)
+    expect(cancelled[0]!.reason).toMatch(/混放/)
+    expect(system.getService<Ledger>(LEDGER).find('STAGING', 'S1', 'L2')?.qty).toBe(3)
   })
 })

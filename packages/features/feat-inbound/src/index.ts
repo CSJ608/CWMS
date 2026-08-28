@@ -11,6 +11,7 @@ import {
   INBOUND,
   LEDGER,
   PDA_WORKFLOWS,
+  TASK,
   type DashboardCard,
   type PutawayRequest,
   type PdaWorkflow,
@@ -18,11 +19,17 @@ import {
 } from '@cwms/contracts'
 import { ClientRegistry } from '@cwms/client-registry'
 import { Ledger } from '@cwms/core-ledger'
+import { TaskService, type TaskDetail } from '@cwms/core-task'
 import { definePlugin, type Context, type Plugin } from '@cwms/kernel'
+
+export type PutawayOutcome =
+  | { blocked: false; location: string; line: ReceiptLine }
+  | { blocked: true; reason: string; line: ReceiptLine }
 
 export class InboundService {
   constructor(
     private readonly ledger: Ledger,
+    private readonly tasks: TaskService,
     private readonly ctx: Context,
   ) {}
 
@@ -39,14 +46,55 @@ export class InboundService {
     this.ledger.move(line, staging, target)
     return { blocked: false as const, location: target, line }
   }
+
+  /**
+   * 任务驱动的收货上架：每次调用携带 opId，走完整任务生命周期
+   * （created → assigned → executing → completed/cancelled）。
+   * PDA 弱网重放同 opId 时返回当时的结局——不重复收货、不重复推进。
+   */
+  receiveViaTask(
+    line: ReceiptLine,
+    staging: string,
+    candidates: PutawayRequest['candidates'],
+    opId: string,
+    worker = 'PDA-01',
+  ): PutawayOutcome {
+    const created = this.tasks.create('putaway', { line, staging, candidates }, opId)
+    const task = this.tasks.get(created.id)
+    if (task.status !== 'created') return this.#outcomeOf(task, line) // 幂等重放
+    this.tasks.assign(created.id, worker, `${opId}:assign`)
+    this.tasks.start(created.id, `${opId}:start`)
+    this.ledger.receive(line, staging)
+    const decided = this.ctx.waterfall('putaway/decide', {
+      line,
+      candidates,
+      decision: { ok: true },
+    })
+    const target = decided.decision.location ?? decided.candidates[0]?.location
+    if (!decided.decision.ok || !target) {
+      const reason = decided.decision.reason ?? '没有可用候选库位'
+      this.tasks.cancel(created.id, reason, `${opId}:cancel`)
+      return { blocked: true, reason, line }
+    }
+    this.ledger.move(line, staging, target)
+    const outcome: PutawayOutcome = { blocked: false, location: target, line }
+    this.tasks.complete(created.id, outcome, `${opId}:complete`)
+    return outcome
+  }
+
+  #outcomeOf(task: TaskDetail, line: ReceiptLine): PutawayOutcome {
+    if (task.status === 'completed') return task.result as Extract<PutawayOutcome, { blocked: false }>
+    return { blocked: true, reason: task.reason ?? '任务未完成', line }
+  }
 }
 
 export const featInboundPlugin: Plugin = definePlugin({
   name: 'feat-inbound',
-  inject: [LEDGER, PDA_WORKFLOWS, DASHBOARD_CARDS],
+  inject: [LEDGER, TASK, PDA_WORKFLOWS, DASHBOARD_CARDS],
   apply(ctx) {
     const ledger = ctx.getService<Ledger>(LEDGER)
-    ctx.provide(INBOUND, new InboundService(ledger, ctx))
+    const tasks = ctx.getService<TaskService>(TASK)
+    ctx.provide(INBOUND, new InboundService(ledger, tasks, ctx))
 
     // client 半身：PDA 端收到的是一份工作流定义（任务驱动，ADR-0004）
     ctx.getService<ClientRegistry<PdaWorkflow>>(PDA_WORKFLOWS).register({

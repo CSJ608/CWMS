@@ -6,9 +6,10 @@
  * ABC overlay 配置改变决策（复杂度按需付费）→ 客户端投影只是数据。
  */
 
-import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_WORKFLOWS, type ReceiptLine } from '@cwms/contracts'
+import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_WORKFLOWS, TASK, type ReceiptLine } from '@cwms/contracts'
 import { ClientRegistry, type DashboardCard, type PdaWorkflow } from '@cwms/client-registry'
 import { ledgerPlugin, Ledger } from '@cwms/core-ledger'
+import { coreTaskPlugin, TaskService } from '@cwms/core-task'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
 import { createSystem } from '@cwms/kernel'
@@ -29,6 +30,7 @@ function build() {
   const system = createSystem()
   system.mount(clientRegistryPlugin)
   system.mount(ledgerPlugin)
+  system.mount(coreTaskPlugin)
   system.mount(featInboundPlugin)
   system.mount(dashboardProjectionPlugin)
   system.mount(putawayZonePlugin)
@@ -77,6 +79,21 @@ say(
     readModel: system.getService<{ todayInboundQty: number }>('dashboard/read-model'),
   },
 )
+
+// 6. 任务驱动 + opId 幂等：PDA 弱网重放安全——重复提交不重复收货
+const taskLine: ReceiptLine = { sku: 'SKU-3001', lot: 'L20260901', qty: 8 }
+const firstRun = inbound(system).receiveViaTask(taskLine, 'STAGING', CANDIDATES, 'op-9001')
+const totalAfterFirst = system.getService<Ledger>(LEDGER).total()
+const replayRun = inbound(system).receiveViaTask(taskLine, 'STAGING', CANDIDATES, 'op-9001')
+say('⑥ 任务驱动收货（opId 幂等重放）', {
+  firstRun,
+  replayRun,
+  重放后账本总量不变: totalAfterFirst === system.getService<Ledger>(LEDGER).total(),
+  任务轨迹: system
+    .getService<TaskService>(TASK)
+    .list('putaway')
+    .map((t) => `${t.id} ${t.status}${t.reason ? `（${t.reason}）` : ''}`),
+})
 
 console.log('\n== 账本终态（唯一变更通道的产物） ==')
 console.log(JSON.stringify(system.getService<Ledger>(LEDGER).snapshot(), null, 2))

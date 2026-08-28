@@ -10,6 +10,7 @@
     "@cwms/client-registry": "workspace:*",
     "@cwms/contracts": "workspace:*",
     "@cwms/core-ledger": "workspace:*",
+    "@cwms/core-task": "workspace:*",
     "@cwms/kernel": "workspace:*"
   }
 }
