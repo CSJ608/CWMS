@@ -37,3 +37,4 @@ CWMS 不是产品，是**试验田**：实践"一切皆插件"理念、探索工
 - 大范围探索用子智能体（Explore），主会话保持决策与编辑
 - 每次会话结束前更新 `_handoff.md`（下次会话从哪里继续）
 - 新的协作方式实验（MCP、自动化、CI 里的 AI 步骤）记录到 issues，标签 `collab`
+- **GitHub MCP 闭环可用**（issue #5 验收通过）：分支→提交→PR→等 CI→squash 合并→显式关 issue 全程 MCP 工具，禁用 shell `gh`。两个实测边界：PR 正文中文「关闭 #N」不触发联动，收尾必须 `update_issue` 显式关闭；MCP 工具面无 Projects 看板工具，归档核验留给人
