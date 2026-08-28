@@ -11,6 +11,7 @@ export default defineConfig({
       '@cwms/core-ledger': p('./packages/core-ledger/src/index.ts'),
       '@cwms/core-task': p('./packages/core-task/src/index.ts'),
       '@cwms/pda-runtime': p('./packages/pda-runtime/src/index.ts'),
+      '@cwms/pc-runtime': p('./packages/pc-runtime/src/index.ts'),
       '@cwms/client-registry': p('./packages/client-registry/src/index.ts'),
       '@cwms/plugin-putaway-zone': p('./packages/plugins/putaway-zone/src/index.ts'),
       '@cwms/plugin-putaway-abc': p('./packages/plugins/putaway-abc/src/index.ts'),

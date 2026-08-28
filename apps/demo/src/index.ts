@@ -6,11 +6,12 @@
  * ABC overlay 配置改变决策（复杂度按需付费）→ 客户端投影只是数据。
  */
 
-import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_RUNTIME, PDA_WORKFLOWS, TASK, type ReceiptLine } from '@cwms/contracts'
+import { DASHBOARD_CARDS, INBOUND, LEDGER, PDA_RUNTIME, PDA_WORKFLOWS, PC_RUNTIME, TASK, type ReceiptLine } from '@cwms/contracts'
 import { ClientRegistry, type DashboardCard, type PdaWorkflow } from '@cwms/client-registry'
 import { ledgerPlugin, Ledger } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
 import { PdaRuntime, pdaRuntimePlugin } from '@cwms/pda-runtime'
+import { PcRuntime, pcRuntimePlugin } from '@cwms/pc-runtime'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
 import { createSystem } from '@cwms/kernel'
@@ -36,6 +37,7 @@ function build() {
   system.mount(dashboardProjectionPlugin)
   system.mount(putawayZonePlugin)
   system.mount(pdaRuntimePlugin)
+  system.mount(pcRuntimePlugin)
   return system
 }
 
@@ -146,6 +148,11 @@ try {
 } catch (error) {
   say('⑧b 未知配置项被拒绝（旧实例仍在岗）', (error as Error).message)
 }
+
+// 9. PC 投影：表格描述符 → pc-runtime——"PC 交互是数据的函数"（ADR-0009）
+const pc = system.getService<PcRuntime>(PC_RUNTIME)
+pc.bindProvider('inventory', () => system.getService<Ledger>(LEDGER).snapshot().map((line) => ({ ...line })))
+say('⑨ PC 表格：库存一览（组合根绑定数据源）', pc.query('inventory'))
 
 console.log('\n== 账本终态（唯一变更通道的产物） ==')
 console.log(JSON.stringify(system.getService<Ledger>(LEDGER).snapshot(), null, 2))
