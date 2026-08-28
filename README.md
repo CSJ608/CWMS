@@ -48,7 +48,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
    veto-mixed-lot
 ```
 
-依赖方向铁律：**功能与策略只准依赖 contracts 与 kernel；内核不 import 任何策略；所有 client 半身只通过 contracts 对话。**
+依赖方向铁律：**功能与策略只准依赖 contracts 与 kernel；内核不 import 任何策略；所有 client 半身只通过 contracts 对话。**（`pnpm check:deps` 在 CI 强制执行，ADR-0008）
 
 ## 决策记录（ADR）
 
@@ -61,6 +61,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 - [ADR-0005 任务机内核：显式迁移表与 opId 幂等推进](docs/adr/0005-任务机内核-迁移表与幂等推进.md)
 - [ADR-0006 端 runtime：通用工作流引擎与组合根绑定](docs/adr/0006-端runtime-通用工作流引擎与组合根绑定.md)
 - [ADR-0007 配置 schema 与 overlay 合并语义](docs/adr/0007-配置schema与overlay合并语义.md)
+- [ADR-0008 依赖方向守卫与服务接口住在契约包](docs/adr/0008-依赖方向守卫与服务接口住在契约包.md)
 
 理念出处与新会话按需阅读地图见[参考资料索引](docs/references.md)。
 
