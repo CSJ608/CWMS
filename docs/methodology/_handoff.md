@@ -6,7 +6,12 @@
 
 ### 已完成
 
-- 全流程门禁首次演练（PR #6，MIT 许可证）：分支 → 本地门禁 → PR → CI 双检（标题规范+类型测试）→ squash 合并 → main CI 绿。约定已写入 CONTRIBUTING：代码/契约/配置变更走 PR；交接快照可直接提交。
+- 参考资料索引 docs/references.md（PR #7）：理念出处五组（源体系/反面教材/模块化/WMS 语境/工程规范）+ 任务导向按需阅读地图；本地 Cordis 源码镜像在 `C:\work\OpenCode\deepseek-harness\vendor\cordis`。新会话冷启动：README → ADR-0001 → references.md。
+
+### 全流程门禁演练记录
+
+- PR #6（MIT 许可证）：分支 → 本地门禁 → PR → CI 双检 → squash 合并 → main CI 绿。
+- PR #7（参考资料索引）：同流程复用，门禁已成惯例。约定见 CONTRIBUTING：代码/契约/配置变更走 PR；交接快照可直接提交。
 
 - 仓库骨架：pnpm monorepo + TS（module ESNext + Bundler resolution），vitest，9 包
 - 内核 `@cwms/kernel`：provide/getService、inject 校验、LIFO 副作用回滚、级联卸载、依赖图清理、emit/waterfall（短路语义）、reload
