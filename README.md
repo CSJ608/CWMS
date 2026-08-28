@@ -57,6 +57,8 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 - [ADR-0003 包拓扑：纵切片，按角色拆缝](docs/adr/0003-包拓扑-纵切片按角色拆缝.md)
 - [ADR-0004 三端投影：PC/PDA/大屏是同一领域的三种函数](docs/adr/0004-三端投影.md)
 
+理念出处与新会话按需阅读地图见[参考资料索引](docs/references.md)。
+
 ## 已知限制（诚实清单）
 
 - 事件只实现 emit / waterfall；parallel / serial 待真实需求出现再引入。

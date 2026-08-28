@@ -11,7 +11,8 @@ CWMS 不是产品，是**试验田**：实践"一切皆插件"理念、探索工
 
 1. [README.md](README.md) —— 定位、包地图、架构一页图
 2. [docs/adr/](docs/adr/) —— **全部已接受的 ADR**。任何与 ADR 冲突的方案，要么改方案，要么先提 ADR 修订
-3. [docs/methodology/_handoff.md](docs/methodology/_handoff.md) —— 交接快照：上次进度与下一步
+3. [docs/references.md](docs/references.md) —— **参考资料与按需阅读地图**：理念出处（含本地 Cordis/DSH 镜像路径）与"做什么任务读什么"的对照表
+4. [docs/methodology/_handoff.md](docs/methodology/_handoff.md) —— 交接快照：上次进度与下一步
 
 ## 会话开始做什么
 
