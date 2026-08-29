@@ -1,6 +1,6 @@
 # 路线图 agent-lab-1（issue #27 Phase 1）
 
-> 状态：**Phase 1 运行中（2026-08-29 人指令开跑，R1/R2 已完成，R3→R4 进行中）**。
+> 状态：**Phase 1 运行中（2026-08-29 人指令开跑，R1/R2/R3 已完成，R4 进行中）**。
 > 每项含验收标准（机器可验证）与门禁矩阵；执行细则见 [agent-lab README](../methodology/agent-lab/README.md)。
 
 ## R1 操作反馈 toast（apps/web）— [x] 已完成（PR #29，修复 2 轮后四门全 pass，2026-08-29 合并 a3c9b51；追加验收：完整错误呈现修复 40 字符截断、数量前置校验）
@@ -19,7 +19,7 @@ PDA 面板下方列出历史会话（工作流名、状态、结局摘要），�
 - 门禁矩阵：**UX、质量、代码**
 - 预估：仅 apps/web
 
-## R3 库存一览按库位筛选（contracts + pc-runtime + apps/web）— [ ] 未开始
+## R3 库存一览按库位筛选（contracts + pc-runtime + apps/web）— [x] 已完成（PR #31，零修复轮三门全 pass，2026-08-29 合并 8e997ab；ADR-0009 增补 filters 语义；连带修复 web GET 路由先写头后求值缺陷）
 
 `PcTable` 增加可选 `filters` 描述符字段（最小语义：列等值筛选）；pc-runtime `query` 接受可选筛选参数；web 界面 PC 面板提供库位筛选输入。这是「PC 过滤字段」从"等真实需求"到"有第一个真实消费者"的转正。
 
