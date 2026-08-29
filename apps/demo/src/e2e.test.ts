@@ -183,7 +183,10 @@ describe('端到端：PDA 扫码 → runtime → 任务机 → 策略缝 → 账
     expect(board.snapshot().columns.find((c) => c.status === 'completed')!.taskIds.length).toBeGreaterThanOrEqual(1)
     expect(system.getService<TaskService>(TASK).list('pick', 'completed')).toHaveLength(1)
     const logView = pc.query('outbound-log')
-    expect(logView.rows).toContainEqual({ location: 'C-03-01', sku: 'SKU-8001', lot: 'L8', qty: 4 })
+    expect(logView.columns.map((c) => c.key)).toEqual(['location', 'sku', 'lot', 'qty', 'ts'])
+    const flow = logView.rows.find((r) => r.sku === 'SKU-8001')!
+    expect(flow).toMatchObject({ location: 'C-03-01', lot: 'L8', qty: 4 })
+    expect(flow.ts).toBeGreaterThan(0) // ts 从事件透传（ADR-0011 增补），非读模型自取时刻
     expect(dash.query('outbound-rate').value).toBe(4)
     expect(dash.query('inbound-rate').value).toBeGreaterThanOrEqual(6)
   })

@@ -52,6 +52,8 @@ export interface LedgerChanged {
   location: string
   /** 仅 move：移出库位。事件流守恒的依据——重放可重建账本（ADR-0011）。 */
   from?: string
+  /** 事件产生时刻（毫秒，内核单点打上）。元数据：不参与守恒重放，顺序由事件流次序定义（ADR-0011 增补）。 */
+  ts: number
 }
 
 // ---- 上架策略缝（waterfall：包装与短路即决策）----

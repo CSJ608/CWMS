@@ -63,9 +63,10 @@ describe('出库纵切片：任务机 + 账本 ship 通道', () => {
     ledger.receive(line(10), 'A-01')
     outbound.shipViaTask(line(4), 'A-01', 'op-4')
     ledger.receive(line(2), 'B-01') // 入库不计入出库读模型
-    const readModel = system.getService<{ todayOutboundQty: number; log: Array<{ sku: string; qty: number; location: string }> }>('outbound/read-model')
+    const readModel = system.getService<{ todayOutboundQty: number; log: Array<{ ts: number; sku: string; qty: number; location: string }> }>('outbound/read-model')
     expect(readModel.todayOutboundQty).toBe(4)
-    expect(readModel.log).toEqual([{ location: 'A-01', sku: 'S1', lot: 'L1', qty: 4 }])
+    expect(readModel.log).toEqual([{ location: 'A-01', sku: 'S1', lot: 'L1', qty: 4, ts: expect.any(Number) }])
+    expect(readModel.log[0]!.ts).toBeGreaterThan(0)
     system.unmount('projection-outbound')
     expect(readModel.todayOutboundQty).toBe(0)
     expect(readModel.log).toEqual([])
