@@ -72,9 +72,12 @@
   .outcome-ok { color: var(--green); } .outcome-bad { color: var(--red); }
   .tasks { font-size: 12px; }
   .tasks .row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dotted #1a2440; color: var(--muted); }
+  .history { font-size: 12px; }
+  .history .row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; padding: 4px 0; border-bottom: 1px dotted #1a2440; color: var(--muted); }
   .badge { border-radius: 4px; padding: 0 6px; font-size: 11px; }
   .b-created { background: #233; } .b-assigned { background: #234; } .b-executing { background: #375078; }
   .b-completed { background: #1d5c41; } .b-cancelled { background: #6b2f2f; }
+  .b-ok { background: #1d5c41; } .b-bad { background: #6b2f2f; }
   .empty { color: #55648a; font-size: 12.5px; padding: 8px 2px; }
   /* 不变量：top 必须保持在 header 与 .ops 工具条（合计 ≈150px，随头部/工具条排版变化）之下——
      越上会遮 header 右侧「账本总量」计数；1024–1200px 窄视口下长 toast 还会压住出库库位输入与「拣货」按钮 */
@@ -152,6 +155,8 @@
         </div>
       </div>
     </div>
+    <h2 style="margin-top:16px">会话历史（最近 6 条）</h2>
+    <div class="history" id="pda-history"></div>
   </section>
 </main>
 
@@ -199,6 +204,32 @@ async function refresh() {
   const snap = activeSession && sessions.find((x) => x.id === activeSession.id)
   if (snap) renderPda(snap)
   else if (activeSession) { renderPda(null); activeSession = null }
+
+  const wfTitle = {}
+  s.pda.workflows.forEach((w) => { wfTitle[w.id] = w.title })
+  const done = sessions.filter((x) => x.status === 'completed').slice(-6)
+  $('pda-history').innerHTML = done.length ? done.slice().reverse().map((x) => {
+    const ok = x.outcome && x.outcome.blocked === false
+    return `
+    <div class="row">
+      <span class="badge ${ok ? 'b-ok' : 'b-bad'}">${ok ? '成功' : '失败'}</span>
+      <span>${esc(wfTitle[x.workflowId] ?? x.workflowId)}</span>
+      ${x.taskId ? `<span>任务 ${esc(x.taskId)}</span>` : ''}
+      ${historyDetail(x)}
+    </div>`
+  }).join('')
+    : `<div class="empty">（无会话）</div>`
+}
+
+function historyDetail(session) {
+  const o = session.outcome
+  if (!o || o.blocked === undefined) return ''
+  const verdict = o.blocked === false
+    ? `<span class="outcome-ok">✔ 成功 → ${esc(o.location ?? '')}</span>`
+    : `<span class="outcome-bad">✘ ${esc(o.reason ?? '被拒绝')}</span>`
+  const collected = Object.entries(session.collected ?? {})
+    .map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' · ')
+  return verdict + (collected ? `<span>${collected}</span>` : '')
 }
 
 function renderPda(snap) {
