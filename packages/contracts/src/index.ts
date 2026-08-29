@@ -124,11 +124,18 @@ export interface PcColumn {
   title: string
 }
 
+/** 单列筛选声明：key 须对应 PcTable.columns 的某列；语义=列等值（ADR-0009 增补）。 */
+export interface PcFilter {
+  key: string
+}
+
 /** PC 表格描述符：纯数据，不含任何 UI 代码；行数据由组合根绑定。 */
 export interface PcTable {
   id: string
   title: string
   columns: PcColumn[]
+  /** 可选：声明本表可筛的列（列等值）。未声明的列 query 传入即报错——筛选面与列定义同为描述符权限。 */
+  filters?: PcFilter[]
 }
 
 // ---- 服务契约：实现住在各包，接口住在契约包（ADR-0008）----

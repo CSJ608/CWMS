@@ -7,6 +7,8 @@
  * - **数据绑定在组合根**：谁组装系统谁 bindProvider。功能包只登记一次
  *   描述符即获得 PC 能力，零 UI 代码。
  * - 无分页/排序/虚拟滚动——投影按需付费（ADR-0002），真实需求出现再加。
+ *   列等值筛选已由第一个真实消费者转正：描述符 filters 字段 + query 筛选参数
+ *   （ADR-0009 增补）；其余过滤/排序语义仍按需付费。
  */
 
 import { PC_TABLES, PC_RUNTIME, type ModuleRegistry, type PcColumn, type PcTable } from '@cwms/contracts'
@@ -36,12 +38,27 @@ export class PcRuntime {
     this.#providers.set(tableId, provide)
   }
 
-  query(tableId: string): TableView {
+  /** 查询渲染形状；filter 为「列 → 期望值」的等值筛选，键须既是表格列、又在描述符 filters 中声明。 */
+  query(tableId: string, filter?: Partial<TableRow>): TableView {
     const table = this.#tables?.get(tableId)
     if (!table) throw new Error(`PC 表格 ${tableId} 未注册`)
     const provide = this.#providers.get(tableId)
     if (!provide) throw new Error(`PC 表格 ${tableId} 未绑定数据源（组合根职责，见 bindProvider）`)
-    return { id: table.id, title: table.title, columns: table.columns, rows: provide() }
+    const wanted = Object.entries(filter ?? {})
+    if (wanted.length > 0) {
+      const declared = new Set((table.filters ?? []).map((f) => f.key))
+      for (const [key] of wanted) {
+        if (!table.columns.some((c) => c.key === key)) {
+          throw new Error(`PC 表格 ${tableId} 无列 ${key}，无法筛选（列：${table.columns.map((c) => c.key).join('、')}）`)
+        }
+        if (!declared.has(key)) {
+          throw new Error(`PC 表格 ${tableId} 的列 ${key} 未在 filters 中声明为可筛列`)
+        }
+      }
+    }
+    const rows =
+      wanted.length === 0 ? provide() : provide().filter((row) => wanted.every(([key, value]) => row[key] === value))
+    return { id: table.id, title: table.title, columns: table.columns, rows }
   }
 
   tables(): PcTable[] {

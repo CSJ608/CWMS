@@ -73,6 +73,51 @@ describe('PC runtime：描述符消费与查询组装', () => {
   })
 })
 
+describe('PC runtime：列等值筛选（ADR-0009 增补）', () => {
+  const FILTERABLE: PcTable = { ...TABLE, filters: [{ key: 'location' }] }
+
+  it('筛选命中：等值行保留，标题与列不变', () => {
+    const pda = mount(fakeRegistry(FILTERABLE))
+    pda.bindProvider('inventory', () => [
+      { location: 'A-01', qty: 5 },
+      { location: 'B-01', qty: 2 },
+      { location: 'A-01', qty: 3 },
+    ])
+    const view = pda.query('inventory', { location: 'A-01' })
+    expect(view.title).toBe('库存一览')
+    expect(view.columns).toEqual(FILTERABLE.columns)
+    expect(view.rows).toEqual([
+      { location: 'A-01', qty: 5 },
+      { location: 'A-01', qty: 3 },
+    ])
+  })
+
+  it('筛选未命中：行集为空，不报错', () => {
+    const pda = mount(fakeRegistry(FILTERABLE))
+    pda.bindProvider('inventory', () => [{ location: 'A-01', qty: 5 }])
+    expect(pda.query('inventory', { location: 'Z-99' }).rows).toEqual([])
+  })
+
+  it('未知列报错：错误信息列出可用列', () => {
+    const pda = mount(fakeRegistry(FILTERABLE))
+    pda.bindProvider('inventory', () => [])
+    expect(() => pda.query('inventory', { nope: 'x' })).toThrow(/无列 nope/)
+  })
+
+  it('列存在但未在 filters 声明：报错，筛选面归描述符管', () => {
+    const pda = mount(fakeRegistry(FILTERABLE))
+    pda.bindProvider('inventory', () => [])
+    expect(() => pda.query('inventory', { qty: 5 })).toThrow(/未在 filters 中声明/)
+  })
+
+  it('无 filters 描述符的表不可筛；空筛选对象等同不筛', () => {
+    const pda = mount() // TABLE 未声明 filters
+    pda.bindProvider('inventory', () => [{ location: 'A-01', qty: 5 }])
+    expect(() => pda.query('inventory', { location: 'A-01' })).toThrow(/未在 filters 中声明/)
+    expect(pda.query('inventory', {}).rows).toEqual([{ location: 'A-01', qty: 5 }])
+  })
+})
+
 describe('PC runtime：宿主插件', () => {
   it('卸载可逆，重挂载为全新实例', () => {
     const system = createSystem()
