@@ -6,7 +6,7 @@
  * ABC overlay 配置改变决策（复杂度按需付费）→ 客户端投影只是数据。
  */
 
-import { DASHBOARD_BOARD, DASHBOARD_CARDS, DASHBOARD_RUNTIME, INBOUND, LEDGER, PDA_RUNTIME, PDA_WORKFLOWS, PC_RUNTIME, TASK, type ReceiptLine } from '@cwms/contracts'
+import { DASHBOARD_BOARD, DASHBOARD_CARDS, DASHBOARD_RUNTIME, INBOUND, LEDGER, OUTBOUND, PDA_RUNTIME, PDA_WORKFLOWS, PC_RUNTIME, TASK, type ReceiptLine } from '@cwms/contracts'
 import { ClientRegistry, type DashboardCard, type PdaWorkflow } from '@cwms/client-registry'
 import { ledgerPlugin, Ledger } from '@cwms/core-ledger'
 import { coreTaskPlugin, TaskService } from '@cwms/core-task'
@@ -15,6 +15,7 @@ import { PcRuntime, pcRuntimePlugin } from '@cwms/pc-runtime'
 import { DashboardRuntime, dashboardRuntimePlugin, TaskBoard, taskBoardPlugin } from '@cwms/dashboard-runtime'
 import { clientRegistryPlugin } from '@cwms/client-registry'
 import { dashboardProjectionPlugin, featInboundPlugin, InboundService } from '@cwms/feat-inbound'
+import { featOutboundPlugin, outboundProjectionPlugin, OutboundService } from '@cwms/feat-outbound'
 import { createSystem } from '@cwms/kernel'
 import { putawayAbcPlugin } from '@cwms/plugin-putaway-abc'
 import { putawayZonePlugin } from '@cwms/plugin-putaway-zone'
@@ -36,6 +37,8 @@ function build() {
   system.mount(coreTaskPlugin)
   system.mount(featInboundPlugin)
   system.mount(dashboardProjectionPlugin)
+  system.mount(featOutboundPlugin)
+  system.mount(outboundProjectionPlugin)
   system.mount(putawayZonePlugin)
   system.mount(pdaRuntimePlugin)
   system.mount(pcRuntimePlugin)
@@ -160,9 +163,19 @@ say('⑨ PC 表格：库存一览（组合根绑定数据源）', pc.query('inve
 // 10. 大屏投影：卡片指标 + task/changed 作业看板（ADR-0010）——"大屏是指标的函数"
 const dash = system.getService<DashboardRuntime>(DASHBOARD_RUNTIME)
 dash.bindMetric('todayInboundQty', () => system.getService<{ todayInboundQty: number }>('dashboard/read-model').todayInboundQty)
+dash.bindMetric('todayOutboundQty', () => system.getService<{ todayOutboundQty: number }>('outbound/read-model').todayOutboundQty)
 dash.bindMetric('stockTotalQty', () => system.getService<Ledger>(LEDGER).total())
 say('⑩a 大屏卡片（组合根绑定指标源）', dash.cards().map((card) => dash.query(card.id)))
 say('⑩b 作业看板（task/changed 事件喂养）', system.getService<TaskBoard>(DASHBOARD_BOARD).snapshot())
+
+// 11. 第二纵切片：出库——新功能只是新包（ADR-0012）。复用任务机（kind='pick'）、
+//     账本 ship 通道、三端 runtime；库存不足否决是内核不变量，不是策略。
+const outbound = system.getService<OutboundService>(OUTBOUND)
+const pickLine = { sku: 'SKU-4001', lot: 'L20260910', qty: 5 }
+say('⑪a 任务驱动拣货出库', outbound.shipViaTask(pickLine, 'C-03-01', 'op-ship-1'))
+say('⑪b 库存不足如实上报（任务取消，账本不动）', outbound.shipViaTask({ ...pickLine, qty: 999 }, 'C-03-01', 'op-ship-2'))
+pc.bindProvider('outbound-log', () => system.getService<{ log: Array<Record<string, string | number>> }>('outbound/read-model').log.map((row) => ({ ...row })))
+say('⑪c 出库后三端投影', { 大屏卡片: dash.query('outbound-rate'), PC流水: pc.query('outbound-log') })
 
 console.log('\n== 账本终态（唯一变更通道的产物） ==')
 console.log(JSON.stringify(system.getService<Ledger>(LEDGER).snapshot(), null, 2))

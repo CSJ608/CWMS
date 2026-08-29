@@ -14,7 +14,7 @@ CWMS 探索三件事：
 
 ```sh
 pnpm install
-pnpm test      # 19 个测试：内核语义 + 账本不变量 + 端到端纵切片
+pnpm test      # 80 个测试：内核语义 + 账本不变量 + 三端投影 + 双纵切片端到端
 pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插拔 / 可逆性 / ABC overlay）
 ```
 
@@ -34,6 +34,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 | `packages/plugins/putaway-abc` | 策略 | ABC 动碰分级（可选提供者，配置驱动） |
 | `packages/plugins/veto-mixed-lot` | 校验 | 混放否决（waterfall 短路即一票否决） |
 | `packages/features/feat-inbound` | 纵切片 | 收货功能 = host 半身服务 + PDA 工作流 + 大屏卡片，一个包 |
+| `packages/features/feat-outbound` | 纵切片 | 拣货出库（第二纵切片，ADR-0012）：任务机 kind='pick' + 账本 ship 通道，内核零改动 |
 | `apps/demo` | 演示 | 叙事式端到端脚本 |
 
 ## 架构一页图
@@ -69,6 +70,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 - [ADR-0009 PC 投影：表格描述符与查询绑定](docs/adr/0009-PC投影-表格描述符与查询绑定.md)
 - [ADR-0010 大屏投影：卡片查询绑定与作业看板读模型](docs/adr/0010-大屏投影-卡片查询绑定与作业看板读模型.md)
 - [ADR-0011 持久化缝预热：事件流守恒与拆缝条件](docs/adr/0011-持久化缝预热-事件流守恒与拆缝条件.md)
+- [ADR-0012 第二纵切片：出库与新功能即新包](docs/adr/0012-第二纵切片-出库与新功能即新包.md)
 
 理念出处与新会话按需阅读地图见[参考资料索引](docs/references.md)。
 
