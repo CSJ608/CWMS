@@ -122,6 +122,11 @@ describe('端到端：PDA 扫码 → runtime → 任务机 → 策略缝 → 账
     expect(view.columns.map((c) => c.key)).toEqual(['location', 'sku', 'lot', 'qty'])
     expect(view.rows).toContainEqual({ location: 'C-03-01', sku: 'SKU-7001', lot: 'L7', qty: 4 })
 
+    // 筛选（列等值，ADR-0009 增补）：描述符声明 filters 后 query 可按库位筛，行集精确
+    expect(pc.query('inventory', { location: 'C-03-01' }).rows).toEqual([
+      { location: 'C-03-01', sku: 'SKU-7001', lot: 'L7', qty: 4 },
+    ])
+
     // 大屏卡片：描述符 + 组合根指标源，值跟随领域状态
     expect(dash.cards().map((c) => c.id)).toEqual(['inbound-rate', 'outbound-rate'])
     expect(dash.query('inbound-rate').value).toBeGreaterThanOrEqual(4)

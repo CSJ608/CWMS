@@ -127,6 +127,10 @@
 <main>
   <section class="panel">
     <h2>PC · 表格投影（PcTable → query）</h2>
+    <div class="row" style="display:flex;gap:6px;margin-bottom:10px">
+      <input id="flt-loc" placeholder="按库位筛选库存一览…" style="width:150px" />
+      <button class="ghost" onclick="clearLocFilter()">清空</button>
+    </div>
     <div id="tables"></div>
   </section>
 
@@ -170,6 +174,7 @@ const qtyOf = (raw) => {
 }
 let activeSession = null
 let sessions = []
+let locFilter = ''
 
 async function api(path, body) {
   const res = await fetch('/api/' + path, body
@@ -179,7 +184,7 @@ async function api(path, body) {
 }
 
 async function refresh() {
-  const s = await api('state')
+  const s = await api('state' + (locFilter ? `?table=inventory&key=location&value=${encodeURIComponent(locFilter)}` : ''))
   $('stock').textContent = `账本总量 ${s.totals.stock}`
   $('cards').innerHTML = s.cards.map((c) =>
     `<div class="card"><div class="t">${esc(c.title)}</div><div class="v">${esc(c.value)}</div></div>`).join('')
@@ -230,6 +235,12 @@ function historyDetail(session) {
   const collected = Object.entries(session.collected ?? {})
     .map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' · ')
   return verdict + (collected ? `<span>${collected}</span>` : '')
+}
+
+function clearLocFilter() {
+  $('flt-loc').value = ''
+  locFilter = ''
+  refresh()
 }
 
 function renderPda(snap) {
@@ -326,6 +337,7 @@ function esc(v) {
 
 document.addEventListener('DOMContentLoaded', () => {
   $('scan').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitScan() })
+  $('flt-loc').addEventListener('input', () => { locFilter = $('flt-loc').value.trim(); refresh() })
   refresh()
   setInterval(refresh, 1500)
 })

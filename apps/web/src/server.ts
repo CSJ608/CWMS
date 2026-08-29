@@ -102,12 +102,14 @@ system.addListener('web', 'task/changed', (change: TaskChanged) => {
 })
 const taskOfSession = new Map<string, string>()
 
-// ---- 只读状态（投影快照，UI 轮询）----
-function state() {
+// ---- 只读状态（投影快照，UI 轮询；filter 为 PC 表格筛选的透传参数，语义住在 pc-runtime）----
+function state(filter?: { table: string; key: string; value: string }) {
   return {
     totals: { stock: ledger.total() },
     cards: dash.cards().map((card) => dash.query(card.id)),
-    tables: pc.tables().map((t) => pc.query(t.id)),
+    tables: pc
+      .tables()
+      .map((t) => (filter && filter.table === t.id ? pc.query(t.id, { [filter.key]: filter.value }) : pc.query(t.id))),
     board: board.snapshot(),
     tasks: tasks
       .list()
@@ -169,8 +171,13 @@ const server = createServer(async (req, res) => {
       return
     }
     if (req.method === 'GET' && url.pathname === '/api/state') {
+      const table = url.searchParams.get('table')
+      const key = url.searchParams.get('key')
+      const value = url.searchParams.get('value')
+      const filter = table && key && value ? { table, key, value } : undefined // 空值即不筛（清空恢复）
+      const body = JSON.stringify(state(filter)) // 先求值再写头：筛选越界走 catch 的 500，而非崩在已发头之后
       res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
-      res.end(JSON.stringify(state()))
+      res.end(body)
       return
     }
     if (req.method === 'POST' && url.pathname.startsWith('/api/')) {

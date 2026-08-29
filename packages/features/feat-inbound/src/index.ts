@@ -127,6 +127,7 @@ export const featInboundPlugin: Plugin = definePlugin({
         { key: 'lot', title: '批次' },
         { key: 'qty', title: '数量' },
       ],
+      filters: [{ key: 'location' }], // 库位列等值筛选（ADR-0009 增补）
     })
   },
 })
