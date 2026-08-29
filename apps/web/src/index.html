@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CWMS · 三端投影渲染器</title>
+<style>
+  :root {
+    --bg: #0b1020; --panel: #121a30; --panel-2: #0e1526; --line: #223055;
+    --text: #e8edf7; --muted: #8ea0c0; --accent: #4f8cff; --green: #35c48d; --red: #ff6b6b; --amber: #ffb35c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 16px; padding: 14px 22px;
+    border-bottom: 1px solid var(--line); background: var(--panel-2);
+  }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: 0.5px; }
+  header .sub { color: var(--muted); font-size: 12.5px; }
+  header .stock { margin-left: auto; color: var(--green); font-weight: 600; }
+  .ops { display: flex; gap: 18px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex-wrap: wrap; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 10px; margin: 0; background: var(--panel); }
+  legend { color: var(--accent); font-size: 12.5px; padding: 0 6px; }
+  fieldset .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  input, select {
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 6px; padding: 5px 8px; width: 92px; font-size: 13px;
+  }
+  input:focus { outline: 1px solid var(--accent); }
+  button {
+    background: var(--accent); border: 0; color: #fff; border-radius: 6px;
+    padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 600;
+  }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+  button:active { transform: translateY(1px); }
+  main { display: grid; grid-template-columns: 1fr 1.15fr 330px; gap: 14px; padding: 14px 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .panel h2 { font-size: 13px; margin: 2px 0 10px; color: var(--muted); font-weight: 600; letter-spacing: 1px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .card {
+    background: linear-gradient(160deg, #16224200, #0a0f1e00), var(--panel-2);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  }
+  .card .t { color: var(--muted); font-size: 12px; }
+  .card .v { font-size: 30px; font-weight: 700; margin-top: 4px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .board { display: flex; gap: 8px; overflow-x: auto; }
+  .col { min-width: 118px; flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+  .col .st { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .col .st b { color: var(--text); }
+  .chip { font-size: 11.5px; background: #1b2449; border-radius: 5px; padding: 2px 6px; margin-bottom: 4px; color: #b9c7e4; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  td { font-variant-numeric: tabular-nums; }
+  .tbl + .tbl { margin-top: 14px; }
+  .pda-frame {
+    background: #05070d; border: 2px solid var(--line); border-radius: 22px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px; min-height: 430px;
+  }
+  .pda-title { text-align: center; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .pda-screen { background: #0d1424; border-radius: 14px; padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .pda-prompt { border: 1px dashed var(--accent); border-radius: 10px; padding: 10px; }
+  .pda-prompt .act { font-size: 15px; font-weight: 700; }
+  .pda-prompt .exp { color: var(--amber); font-size: 12px; margin-top: 2px; }
+  .pda-log { font-size: 12px; color: var(--muted); overflow-y: auto; flex: 1; }
+  .pda-log div { padding: 2px 0; border-bottom: 1px dotted #1a2440; }
+  .pda-input { display: flex; gap: 6px; }
+  .pda-input input { flex: 1; width: auto; }
+  .outcome-ok { color: var(--green); } .outcome-bad { color: var(--red); }
+  .tasks { font-size: 12px; }
+  .tasks .row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dotted #1a2440; color: var(--muted); }
+  .badge { border-radius: 4px; padding: 0 6px; font-size: 11px; }
+  .b-created { background: #233; } .b-assigned { background: #234; } .b-executing { background: #375078; }
+  .b-completed { background: #1d5c41; } .b-cancelled { background: #6b2f2f; }
+  .empty { color: #55648a; font-size: 12.5px; padding: 8px 2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CWMS · 三端投影</h1>
+  <span class="sub">同一内核，三种函数：PC = 数据 · 大屏 = 指标 · PDA = 任务（ADR-0004）</span>
+  <span class="stock" id="stock"></span>
+</header>
+
+<div class="ops">
+  <fieldset>
+    <legend>入库（收货上架 · 任务驱动）</legend>
+    <div class="row">
+      <input id="in-sku" placeholder="SKU" value="SKU-9001" />
+      <input id="in-lot" placeholder="批次" value="L001" />
+      <input id="in-qty" type="number" value="10" style="width:64px" />
+      <input id="in-loc" placeholder="目标库位" value="A-01-01" />
+      <button onclick="doInbound()">收货</button>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>出库（拣货发货）</legend>
+    <div class="row">
+      <input id="out-sku" placeholder="SKU" value="SKU-9001" />
+      <input id="out-lot" placeholder="批次" value="L001" />
+      <input id="out-qty" type="number" value="3" style="width:64px" />
+      <input id="out-loc" placeholder="拣货库位" value="A-01-01" />
+      <button onclick="doOutbound()">拣货</button>
+    </div>
+  </fieldset>
+</div>
+
+<main>
+  <section class="panel">
+    <h2>PC · 表格投影（PcTable → query）</h2>
+    <div id="tables"></div>
+  </section>
+
+  <section class="panel">
+    <h2>大屏 · 卡片与作业看板（CardView + task/changed）</h2>
+    <div class="cards" id="cards"></div>
+    <div class="board" id="board"></div>
+    <h2 style="margin-top:16px">任务轨迹（最近 12 条）</h2>
+    <div class="tasks" id="tasks"></div>
+  </section>
+
+  <section class="panel">
+    <h2>PDA · 扫码工作流模拟器</h2>
+    <div class="pda-frame">
+      <div class="pda-title">PDA-01</div>
+      <div class="pda-screen">
+        <div class="row" style="display:flex;gap:6px">
+          <select id="wf"></select>
+          <button class="ghost" onclick="startSession()">开始会话</button>
+        </div>
+        <div id="pda-active"></div>
+        <div class="pda-log" id="pda-log"></div>
+        <div class="pda-input" id="pda-input" style="display:none">
+          <input id="scan" placeholder="扫码 / 输入…" />
+          <button onclick="submitScan()">提交</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id)
+let activeSession = null
+let sessions = []
+
+async function api(path, body) {
+  const res = await fetch('/api/' + path, body
+    ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+    : undefined)
+  return res.json()
+}
+
+async function refresh() {
+  const s = await api('state')
+  $('stock').textContent = `账本总量 ${s.totals.stock}`
+  $('cards').innerHTML = s.cards.map((c) =>
+    `<div class="card"><div class="t">${esc(c.title)}</div><div class="v">${esc(c.value)}</div></div>`).join('')
+  $('board').innerHTML = s.board.columns.map((col) =>
+    `<div class="col"><div class="st"><span>${esc(col.status)}</span><b>${col.count}</b></div>` +
+    col.taskIds.map((id) => `<div class="chip">${esc(id)}</div>`).join('') + `</div>`).join('')
+  $('tables').innerHTML = s.tables.length
+    ? s.tables.map((t) => `
+        <div class="tbl"><h2 style="color:var(--accent)">${esc(t.title)}</h2>
+        <table><thead><tr>${t.columns.map((c) => `<th>${esc(c.title)}</th>`).join('')}</tr></thead>
+        <tbody>${t.rows.length ? t.rows.map((r) =>
+          `<tr>${t.columns.map((c) => `<td>${esc(r[c.key])}</td>`).join('')}</tr>`).join('')
+          : `<tr><td colspan="${t.columns.length}" class="empty">（空）</td></tr>`}</tbody></table></div>`).join('')
+    : `<div class="empty">（无已绑定的表格）</div>`
+  $('tasks').innerHTML = s.tasks.length ? s.tasks.map((t) =>
+    `<div class="row"><span class="badge b-${t.status}">${t.status}</span><span>${esc(t.id)}</span>${
+      t.reason ? `<span style="color:var(--red)">（${esc(t.reason).slice(0, 40)}）</span>` : ''}</div>`).join('')
+    : `<div class="empty">（无任务）</div>`
+
+  $('wf').innerHTML = s.pda.workflows.map((w) => `<option value="${esc(w.id)}">${esc(w.title)}</option>`).join('')
+  sessions = s.pda.sessions
+  const snap = activeSession && sessions.find((x) => x.id === activeSession.id)
+  if (snap) renderPda(snap)
+  else if (activeSession) { renderPda(null); activeSession = null }
+}
+
+function renderPda(snap) {
+  if (!snap) {
+    $('pda-active').innerHTML = ''
+    $('pda-input').style.display = 'none'
+    return
+  }
+  $('pda-input').style.display = snap.status === 'running' ? 'flex' : 'none'
+  const p = snap.prompt
+  const outcome = snap.outcome
+  $('pda-active').innerHTML = `
+    <div class="pda-prompt">
+      <div class="act">${p ? `${p.index}/${p.total} · ${esc(p.action)}` : '会话已结束'}</div>
+      <div class="exp">${p ? `等待${p.expects === 'input' ? '键盘输入' : p.expects === 'scan' ? '扫码' : '确认'} · opId 幂等保护中` : ''}</div>
+    </div>
+    ${outcome ? `<div class="${outcome.blocked === false ? 'outcome-ok' : 'outcome-bad'}">${
+      outcome.blocked === false ? `✔ 上架/出库成功 → ${esc(outcome.location ?? '')}` : `✘ ${esc(outcome.reason ?? '被拒绝')}`
+    }</div>` : ''}`
+  const lines = snap.collected && Object.keys(snap.collected).length
+    ? Object.entries(snap.collected).map(([k, v]) => `<div>${esc(k)} = ${esc(v)}</div>`).join('')
+    : '<div>（未采集）</div>'
+  $('pda-log').innerHTML = lines
+}
+
+async function doInbound() {
+  const r = await api('inbound', {
+    sku: $('in-sku').value, lot: $('in-lot').value,
+    qty: Number($('in-qty').value), location: $('in-loc').value,
+  })
+  flash(r)
+  refresh()
+}
+async function doOutbound() {
+  const r = await api('outbound', {
+    sku: $('out-sku').value, lot: $('out-lot').value,
+    qty: Number($('out-qty').value), location: $('out-loc').value,
+  })
+  flash(r)
+  refresh()
+}
+async function startSession() {
+  const r = await api('pda/start', { workflowId: $('wf').value })
+  activeSession = r.result
+  renderPda(activeSession)
+  refresh()
+}
+async function submitScan() {
+  if (!activeSession) return
+  const value = $('scan').value.trim()
+  if (!value) return
+  if (activeSession.prompt && activeSession.prompt.expects === 'input') {
+    const n = Number(value)
+    if (!Number.isInteger(n) || n <= 0) { alert('数量须为正整数'); return }
+    const r = await api('pda/submit', { sessionId: activeSession.id, value: n })
+    activeSession = r.result
+  } else {
+    const r = await api('pda/submit', { sessionId: activeSession.id, value })
+    activeSession = r.result
+  }
+  $('scan').value = ''
+  renderPda(activeSession)
+  refresh()
+}
+
+function flash(r) {
+  if (r && r.ok === false) alert(`操作被拒：${r.error}`)
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (ch) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch])
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('scan').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitScan() })
+  refresh()
+  setInterval(refresh, 1500)
+})
+</script>
+</body>
+</html>
