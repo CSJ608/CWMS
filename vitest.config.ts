@@ -18,6 +18,7 @@ export default defineConfig({
       '@cwms/plugin-putaway-abc': p('./packages/plugins/putaway-abc/src/index.ts'),
       '@cwms/plugin-veto-mixed-lot': p('./packages/plugins/veto-mixed-lot/src/index.ts'),
       '@cwms/feat-inbound': p('./packages/features/feat-inbound/src/index.ts'),
+      '@cwms/feat-outbound': p('./packages/features/feat-outbound/src/index.ts'),
     },
   },
   test: {

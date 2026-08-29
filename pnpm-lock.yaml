@@ -108,6 +108,15 @@ importers:
         specifier: workspace:*
         version: link:../../kernel
 
+  packages/features/feat-outbound:
+    dependencies:
+      '@cwms/contracts':
+        specifier: workspace:*
+        version: link:../../contracts
+      '@cwms/kernel':
+        specifier: workspace:*
+        version: link:../../kernel
+
   packages/kernel: {}
 
   packages/pc-runtime:

@@ -24,7 +24,8 @@
       "@cwms/plugin-putaway-zone": ["packages/plugins/putaway-zone/src/index.ts"],
       "@cwms/plugin-putaway-abc": ["packages/plugins/putaway-abc/src/index.ts"],
       "@cwms/plugin-veto-mixed-lot": ["packages/plugins/veto-mixed-lot/src/index.ts"],
-      "@cwms/feat-inbound": ["packages/features/feat-inbound/src/index.ts"]
+      "@cwms/feat-inbound": ["packages/features/feat-inbound/src/index.ts"],
+      "@cwms/feat-outbound": ["packages/features/feat-outbound/src/index.ts"]
     }
   },
   "include": ["packages/**/*.ts", "apps/**/*.ts", "vitest.config.ts"]

@@ -12,6 +12,7 @@
 
 export const LEDGER = 'ledger'
 export const INBOUND = 'inbound'
+export const OUTBOUND = 'outbound'
 export const TASK = 'task'
 export const PDA_WORKFLOWS = 'pda/workflows'
 export const PDA_RUNTIME = 'pda/runtime'
@@ -31,6 +32,13 @@ export interface StockLine {
 }
 
 export interface ReceiptLine {
+  sku: string
+  lot: string
+  qty: number
+}
+
+/** 出库行：与 ReceiptLine 同形（结构化匹配）；发货语义由出库功能赋予。 */
+export interface OutboundLine {
   sku: string
   lot: string
   qty: number
@@ -106,7 +114,7 @@ export interface PdaWorkflow {
 export interface DashboardCard {
   id: string
   title: string
-  metric: 'todayInboundQty' | 'stockTotalQty'
+  metric: 'todayInboundQty' | 'todayOutboundQty' | 'stockTotalQty'
 }
 
 // ---- PC 投影描述符（ADR-0004：PC 交互是数据的函数）----
@@ -141,7 +149,7 @@ export interface LedgerReader {
 /** 完整账本 API：只有被授权驱动变更的功能宿主使用。 */
 export interface InventoryLedger extends LedgerReader {
   receive(line: ReceiptLine, location: string): void
-  ship(line: ReceiptLine, location: string): void
+  ship(line: OutboundLine, location: string): void
   move(line: ReceiptLine, from: string, to: string): void
 }
 
