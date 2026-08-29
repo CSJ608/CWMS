@@ -15,6 +15,9 @@ export class Ledger implements InventoryLedger {
   readonly #stocks = new Map<string, StockLine>()
   #emit: ((change: LedgerChanged) => void) | null = null
 
+  /** 时钟可注入（测试用），缺省 Date.now——事件 ts 的唯一真相源，不在多处取 now。 */
+  constructor(private readonly now: () => number = Date.now) {}
+
   /** 由宿主插件在挂载时接通事件总线（保持本类不依赖内核细节）。 */
   bind(emit: (change: LedgerChanged) => void): void {
     this.#emit = emit
@@ -54,7 +57,8 @@ export class Ledger implements InventoryLedger {
     this.#stocks.set(kTo, { location: to, sku: line.sku, lot: line.lot, qty: nextTo })
     // 事件携带移出侧（from）与移入侧（location）——收/发/移的事件流按守恒语义
     // 可完整重放重建账本（ADR-0011），这是事件流可作为审计与持久化格式的资格。
-    this.#emit?.({ kind: 'move', sku: line.sku, lot: line.lot, qty: line.qty, location: to, from })
+    // ts 为元数据，不参与守恒重放（ADR-0011 增补）。
+    this.#emit?.({ kind: 'move', sku: line.sku, lot: line.lot, qty: line.qty, location: to, from, ts: this.now() })
   }
 
   linesAt(location: string): StockLine[] {
@@ -87,7 +91,7 @@ export class Ledger implements InventoryLedger {
         lot: line.lot,
         qty: nextQty,
       })
-    this.#emit?.({ kind, sku: line.sku, lot: line.lot, qty: Math.abs(delta), location })
+    this.#emit?.({ kind, sku: line.sku, lot: line.lot, qty: Math.abs(delta), location, ts: this.now() })
   }
 
   #assertPositive(qty: number): void {

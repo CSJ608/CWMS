@@ -104,6 +104,7 @@ export const featOutboundPlugin: Plugin = definePlugin({
         { key: 'sku', title: 'SKU' },
         { key: 'lot', title: '批次' },
         { key: 'qty', title: '数量' },
+        { key: 'ts', title: '时间' },
       ],
     })
   },
@@ -116,12 +117,12 @@ export const outboundProjectionPlugin: Plugin = definePlugin({
   apply(ctx) {
     const readModel = {
       todayOutboundQty: 0,
-      log: [] as Array<{ location: string; sku: string; lot: string; qty: number }>,
+      log: [] as Array<{ ts: number; location: string; sku: string; lot: string; qty: number }>,
     }
     ctx.on('ledger/changed', (change) => {
       if (change.kind !== 'ship') return
       readModel.todayOutboundQty += change.qty
-      readModel.log.push({ location: change.location, sku: change.sku, lot: change.lot, qty: change.qty })
+      readModel.log.push({ ts: change.ts, location: change.location, sku: change.sku, lot: change.lot, qty: change.qty }) // ts 从事件透传——时间真相源在事件（ADR-0011 增补）
     })
     ctx.effect(() => {
       readModel.todayOutboundQty = 0

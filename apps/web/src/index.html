@@ -196,7 +196,7 @@ async function refresh() {
         <div class="tbl"><h2 style="color:var(--accent)">${esc(t.title)}</h2>
         <table><thead><tr>${t.columns.map((c) => `<th>${esc(c.title)}</th>`).join('')}</tr></thead>
         <tbody>${t.rows.length ? t.rows.map((r) =>
-          `<tr>${t.columns.map((c) => `<td>${esc(r[c.key])}</td>`).join('')}</tr>`).join('')
+          `<tr>${t.columns.map((c) => `<td>${c.key === 'ts' ? esc(fmtTime(r[c.key])) : esc(r[c.key])}</td>`).join('')}</tr>`).join('')
           : `<tr><td colspan="${t.columns.length}" class="empty">（空）</td></tr>`}</tbody></table></div>`).join('')
     : `<div class="empty">（无已绑定的表格）</div>`
   $('tasks').innerHTML = s.tasks.length ? s.tasks.map((t) =>
@@ -334,6 +334,8 @@ function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, (ch) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch])
 }
+
+const fmtTime = (ms) => new Date(Number(ms)).toLocaleTimeString('zh-CN', { hour12: false })
 
 document.addEventListener('DOMContentLoaded', () => {
   $('scan').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitScan() })

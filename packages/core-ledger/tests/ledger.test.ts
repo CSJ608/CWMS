@@ -21,8 +21,8 @@ describe('库存账：唯一变更通道', () => {
     expect(() => ledger.receive(line(-1), 'A-01')).toThrow(/正整数/)
   })
 
-  it('每笔变更发出 ledger/changed 事件', () => {
-    const ledger = new Ledger()
+  it('每笔变更发出 ledger/changed 事件，ts 为注入时钟的时刻', () => {
+    const ledger = new Ledger(() => 1724900000000)
     const emit = vi.fn()
     ledger.bind(emit)
     ledger.receive(line(5), 'A-01')
@@ -32,7 +32,20 @@ describe('库存账：唯一变更通道', () => {
       lot: 'L1',
       qty: 5,
       location: 'A-01',
+      ts: 1724900000000,
     })
+  })
+
+  it('缺省时钟：ts 为正数且落在取值时刻区间内', () => {
+    const ledger = new Ledger()
+    const events: import('@cwms/contracts').LedgerChanged[] = []
+    ledger.bind((change) => events.push(change))
+    const before = Date.now()
+    ledger.receive(line(1), 'A-01')
+    const after = Date.now()
+    expect(typeof events[0]!.ts).toBe('number')
+    expect(events[0]!.ts).toBeGreaterThanOrEqual(before)
+    expect(events[0]!.ts).toBeLessThanOrEqual(after)
   })
 
   it('linesAt 供策略插件读取库位现状（混放判断的依据）', () => {
@@ -58,26 +71,33 @@ describe('库存账：唯一变更通道', () => {
       { from: 'STAGING', location: 'A-01' },
       { from: 'C-01', location: 'A-01' },
     ])
+    expect(events.every((e) => typeof e.ts === 'number' && e.ts > 0)).toBe(true)
 
     // 重放语义：receive +qty@location；ship -qty@location；move -qty@from +qty@location
-    const replayed = new Map<string, number>()
-    for (const e of events) {
-      const apply = (location: string, delta: number) => {
-        const k = `${location}|${e.sku}|${e.lot}`
-        const next = (replayed.get(k) ?? 0) + delta
-        if (next === 0) replayed.delete(k)
-        else replayed.set(k, next)
+    // 入参类型 Omit<'ts'> 即类型级证明：重放只消费守恒字段，不读 ts
+    const replay = (evts: Array<Omit<import('@cwms/contracts').LedgerChanged, 'ts'>>) => {
+      const replayed = new Map<string, number>()
+      for (const e of evts) {
+        const apply = (location: string, delta: number) => {
+          const k = `${location}|${e.sku}|${e.lot}`
+          const next = (replayed.get(k) ?? 0) + delta
+          if (next === 0) replayed.delete(k)
+          else replayed.set(k, next)
+        }
+        if (e.kind === 'receive') apply(e.location, +e.qty)
+        else if (e.kind === 'ship') apply(e.location, -e.qty)
+        else {
+          apply(e.from!, -e.qty)
+          apply(e.location, +e.qty)
+        }
       }
-      if (e.kind === 'receive') apply(e.location, +e.qty)
-      else if (e.kind === 'ship') apply(e.location, -e.qty)
-      else {
-        apply(e.from!, -e.qty)
-        apply(e.location, +e.qty)
-      }
+      return replayed
     }
     const expected = new Map(
       ledger.snapshot().map((s) => [`${s.location}|${s.sku}|${s.lot}`, s.qty] as const),
     )
-    expect(replayed).toEqual(expected)
+    expect(replay(events)).toEqual(expected)
+    // ts 是元数据：剥离后重放结果不变——重放不读 ts，顺序由事件流次序定义（ADR-0011 增补）
+    expect(replay(events.map(({ ts, ...rest }) => rest))).toEqual(expected)
   })
 })
