@@ -1,6 +1,6 @@
 # 路线图 agent-lab-1（issue #27 Phase 1）
 
-> 状态：**Phase 1 运行中（2026-08-29 人指令开跑，R1/R2/R3 已完成，R4 进行中）**。
+> 状态：**已完成（2026-08-29 Phase 1 自治运行收官：R1~R4 全部合并，PR #29/#30/#31/#32，总结见 issue #27）**。
 > 每项含验收标准（机器可验证）与门禁矩阵；执行细则见 [agent-lab README](../methodology/agent-lab/README.md)。
 
 ## R1 操作反馈 toast（apps/web）— [x] 已完成（PR #29，修复 2 轮后四门全 pass，2026-08-29 合并 a3c9b51；追加验收：完整错误呈现修复 40 字符截断、数量前置校验）
@@ -27,7 +27,7 @@ PDA 面板下方列出历史会话（工作流名、状态、结局摘要），�
 - 门禁矩阵：**架构、质量、代码**
 - 预估：三个包小改
 
-## R4 ledger/changed 事件时间戳（contracts + core-ledger + feat-outbound + apps/web）— [ ] 未开始
+## R4 ledger/changed 事件时间戳（contracts + core-ledger + feat-outbound + apps/web）— [x] 已完成（PR #32，零修复轮三门全 pass，2026-08-29 合并 9f552ab；ADR-0011 增补 ts 元数据语义；时钟构造器注入单点真相源；测试 85→86）
 
 `LedgerChanged` 增加 `ts`（毫秒）；出库流水与 PC 流水表显示时间；ADR-0011 重放测试更新（ts 为元数据，不参与守恒重放，需在 ADR 中补充说明）。
 
