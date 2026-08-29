@@ -1,9 +1,9 @@
-# 路线图 agent-lab-1（issue #27 Phase 1，条目待人审定后开跑）
+# 路线图 agent-lab-1（issue #27 Phase 1）
 
-> 状态：**草稿——条目与门禁矩阵经人审定后才可开跑**。
+> 状态：**Phase 1 运行中（2026-08-29 人指令开跑，R1 已完成，R2→R4 进行中）**。
 > 每项含验收标准（机器可验证）与门禁矩阵；执行细则见 [agent-lab README](../methodology/agent-lab/README.md)。
 
-## R1 操作反馈 toast（apps/web）— [ ] 未开始
+## R1 操作反馈 toast（apps/web）— [x] 已完成（PR #29，修复 2 轮后四门全 pass，2026-08-29 合并 a3c9b51；追加验收：完整错误呈现修复 40 字符截断、数量前置校验）
 
 写操作（入库/出库/PDA 提交）的结局以页面内 toast 呈现：成功绿、失败红（含原因摘要），自动消失，不打断轮询；移除现有 `alert`。
 
