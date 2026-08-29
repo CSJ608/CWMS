@@ -76,8 +76,9 @@
   .b-created { background: #233; } .b-assigned { background: #234; } .b-executing { background: #375078; }
   .b-completed { background: #1d5c41; } .b-cancelled { background: #6b2f2f; }
   .empty { color: #55648a; font-size: 12.5px; padding: 8px 2px; }
-  /* 22px 对齐全页右缘基准；top 落在 header（≈54px）下方主内容带顶缘，避开头部「账本总量」计数 */
-  #toasts { position: fixed; top: 68px; right: 22px; display: flex; flex-direction: column; gap: 8px; z-index: 10; max-width: 380px; }
+  /* 不变量：top 必须保持在 header 与 .ops 工具条（合计 ≈150px，随头部/工具条排版变化）之下——
+     越上会遮 header 右侧「账本总量」计数；1024–1200px 窄视口下长 toast 还会压住出库库位输入与「拣货」按钮 */
+  #toasts { position: fixed; top: 150px; right: 22px; display: flex; flex-direction: column; gap: 8px; z-index: 10; max-width: 380px; }
   .toast {
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
     padding: 8px 12px; font-size: 13px; word-break: break-all;
