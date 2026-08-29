@@ -23,6 +23,7 @@ import {
   type LedgerReader,
   type OutboundLine,
   type ReceiptLine,
+  type TaskChanged,
   type TaskServiceView,
 } from '@cwms/contracts'
 import { clientRegistryPlugin } from '@cwms/client-registry'
@@ -91,6 +92,16 @@ const submitOf = (workflowId: string) => (collected: Record<string, string | num
 let seq = 0
 const nextOp = (tag: string) => `web-${tag}-${String(++seq)}`
 
+// ---- 会话↔任务关联（呈现层透传，无业务计算）----
+// 订阅既有 task/changed 事件记 opId→taskId；PDA 会话完结那步的 opId 正是
+// onSubmit→tasks.create 的 opId（链式幂等，ADR-0005），据此把任务 id 附到会话快照，
+// 供前端「会话历史」与「任务轨迹」交叉对照。
+const taskOfOp = new Map<string, string>()
+system.addListener('web', 'task/changed', (change: TaskChanged) => {
+  if (change.from === 'void') taskOfOp.set(change.opId, change.taskId)
+})
+const taskOfSession = new Map<string, string>()
+
 // ---- 只读状态（投影快照，UI 轮询）----
 function state() {
   return {
@@ -105,7 +116,7 @@ function state() {
       .map((t) => ({ id: t.id, kind: t.kind, status: t.status, reason: t.reason })),
     pda: {
       workflows: system.getService<{ all(): Array<{ id: string; title: string }> }>(PDA_WORKFLOWS).all(),
-      sessions: pda.list().map((s) => ({ ...s, prompt: s.prompt })),
+      sessions: pda.list().map((s) => ({ ...s, prompt: s.prompt, taskId: taskOfSession.get(s.id) })),
     },
   }
 }
@@ -125,7 +136,15 @@ const actions: Record<string, (body: Body) => unknown> = {
     ),
   outbound: (b) => outbound.shipViaTask({ sku: str(b, 'sku'), lot: str(b, 'lot'), qty: num(b, 'qty') }, str(b, 'location'), nextOp('out')),
   'pda/start': (b) => pda.start(str(b, 'workflowId'), { onSubmit: submitOf(str(b, 'workflowId')) }, nextOp('start')),
-  'pda/submit': (b) => pda.submit(str(b, 'sessionId'), (b['value'] as string | number) ?? '', nextOp('step')),
+  'pda/submit': (b) => {
+    const opId = nextOp('step')
+    const snap = pda.submit(str(b, 'sessionId'), (b['value'] as string | number) ?? '', opId)
+    if (snap.status === 'completed') {
+      const taskId = taskOfOp.get(opId)
+      if (taskId) taskOfSession.set(snap.id, taskId)
+    }
+    return snap
+  },
 }
 
 async function readBody(req: IncomingMessage): Promise<Body> {
