@@ -1,0 +1,24 @@
+{
+  "name": "@cwms/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/server.ts"
+  },
+  "dependencies": {
+    "@cwms/client-registry": "workspace:*",
+    "@cwms/contracts": "workspace:*",
+    "@cwms/core-ledger": "workspace:*",
+    "@cwms/core-task": "workspace:*",
+    "@cwms/dashboard-runtime": "workspace:*",
+    "@cwms/feat-inbound": "workspace:*",
+    "@cwms/feat-outbound": "workspace:*",
+    "@cwms/kernel": "workspace:*",
+    "@cwms/pc-runtime": "workspace:*",
+    "@cwms/pda-runtime": "workspace:*",
+    "@cwms/plugin-putaway-abc": "workspace:*",
+    "@cwms/plugin-putaway-zone": "workspace:*",
+    "@cwms/plugin-veto-mixed-lot": "workspace:*"
+  }
+}

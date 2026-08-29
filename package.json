@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check:deps": "node scripts/check-deps.mjs",
-    "demo": "tsx apps/demo/src/index.ts"
+    "demo": "tsx apps/demo/src/index.ts",
+    "web": "tsx apps/web/src/server.ts"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

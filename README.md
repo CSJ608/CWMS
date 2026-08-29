@@ -16,6 +16,7 @@ CWMS 探索三件事：
 pnpm install
 pnpm test      # 80 个测试：内核语义 + 账本不变量 + 三端投影 + 双纵切片端到端
 pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插拔 / 可逆性 / ABC overlay）
+pnpm web       # 图形界面：三端投影渲染器 → http://127.0.0.1:8787
 ```
 
 ## 包地图（v0）
@@ -36,6 +37,7 @@ pnpm demo      # 一条可演示的收货上架工作流（混放否决 / 热插
 | `packages/features/feat-inbound` | 纵切片 | 收货功能 = host 半身服务 + PDA 工作流 + 大屏卡片，一个包 |
 | `packages/features/feat-outbound` | 纵切片 | 拣货出库（第二纵切片，ADR-0012）：任务机 kind='pick' + 账本 ship 通道，内核零改动 |
 | `apps/demo` | 演示 | 叙事式端到端脚本 |
+| `apps/web` | 渲染器 | 三端投影的第一个图形消费者：PC 表格 / 大屏看板 / PDA 扫码模拟器（`pnpm web`） |
 
 ## 架构一页图
 

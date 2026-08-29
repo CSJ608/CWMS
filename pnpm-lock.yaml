@@ -57,6 +57,48 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/veto-mixed-lot
 
+  apps/web:
+    dependencies:
+      '@cwms/client-registry':
+        specifier: workspace:*
+        version: link:../../packages/client-registry
+      '@cwms/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@cwms/core-ledger':
+        specifier: workspace:*
+        version: link:../../packages/core-ledger
+      '@cwms/core-task':
+        specifier: workspace:*
+        version: link:../../packages/core-task
+      '@cwms/dashboard-runtime':
+        specifier: workspace:*
+        version: link:../../packages/dashboard-runtime
+      '@cwms/feat-inbound':
+        specifier: workspace:*
+        version: link:../../packages/features/feat-inbound
+      '@cwms/feat-outbound':
+        specifier: workspace:*
+        version: link:../../packages/features/feat-outbound
+      '@cwms/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
+      '@cwms/pc-runtime':
+        specifier: workspace:*
+        version: link:../../packages/pc-runtime
+      '@cwms/pda-runtime':
+        specifier: workspace:*
+        version: link:../../packages/pda-runtime
+      '@cwms/plugin-putaway-abc':
+        specifier: workspace:*
+        version: link:../../packages/plugins/putaway-abc
+      '@cwms/plugin-putaway-zone':
+        specifier: workspace:*
+        version: link:../../packages/plugins/putaway-zone
+      '@cwms/plugin-veto-mixed-lot':
+        specifier: workspace:*
+        version: link:../../packages/plugins/veto-mixed-lot
+
   packages/client-registry:
     dependencies:
       '@cwms/contracts':
