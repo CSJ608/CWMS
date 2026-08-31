@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="14dp"
+    android:background="@color/bg">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/settings"
+        android:textColor="@color/text"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/server_url"
+        android:textColor="@color/muted"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/editServer"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="4dp"
+        android:background="@color/panel2"
+        android:padding="8dp"
+        android:textColor="@color/text"
+        android:textSize="16sp"
+        android:fontFamily="monospace"
+        android:hint="http://192.168.20.252:8080"
+        android:textColorHint="@color/muted"
+        android:inputType="textUri"
+        android:importantForAutofill="no" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/scan_action"
+        android:textColor="@color/muted"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/editAction"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="4dp"
+        android:background="@color/panel2"
+        android:padding="8dp"
+        android:textColor="@color/text"
+        android:textSize="16sp"
+        android:fontFamily="monospace"
+        android:textColorHint="@color/muted"
+        android:inputType="text"
+        android:importantForAutofill="no" />
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/save" />
+</LinearLayout>

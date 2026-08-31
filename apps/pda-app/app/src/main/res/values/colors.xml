@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 延续 CWMS web 深色设计语言(ADR-0013) -->
+    <color name="bg">#0B1020</color>
+    <color name="panel">#121A30</color>
+    <color name="panel2">#0E1526</color>
+    <color name="line">#223055</color>
+    <color name="text">#E8EDF7</color>
+    <color name="muted">#8EA0C0</color>
+    <color name="accent">#4F8CFF</color>
+    <color name="green">#35C48D</color>
+    <color name="red">#FF6B6B</color>
+    <color name="amber">#FFB35C</color>
+</resources>

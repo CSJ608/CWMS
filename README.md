@@ -39,6 +39,7 @@ docker compose up --build -d   # 真实部署形态：frontend(nginx) :8080 + ba
 | `packages/features/feat-outbound` | 纵切片 | 拣货出库（第二纵切片，ADR-0012）：任务机 kind='pick' + 账本 ship 通道，内核零改动 |
 | `apps/demo` | 演示 | 叙事式端到端脚本 |
 | `apps/web` | 渲染器 | 三端界面：`/pc` 操作台 + `/board` 大屏（静态两页）+ `/api` 组合根；docker-compose 部署（ADR-0013） |
+| `apps/pda-app` | 渲染器 | PDA 原生安卓应用（Urovo DT50 等）：扫码会话工作流，广播+键盘双通道，直连 `/api`（ADR-0013；独立 Gradle 工程，CI 不构建） |
 
 ## 架构一页图
 
