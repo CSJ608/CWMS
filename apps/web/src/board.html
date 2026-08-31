@@ -20,10 +20,12 @@
   }
   header h1 { font-size: 17px; margin: 0; letter-spacing: 0.5px; }
   header .sub { color: var(--muted); font-size: 12.5px; }
+  header .stock { margin-left: auto; color: var(--green); font-weight: 600; }
   main { padding: 14px 22px; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
   .panel h2 { font-size: 13px; margin: 2px 0 10px; color: var(--muted); font-weight: 600; letter-spacing: 1px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  /* 通栏大屏形态:卡宽下限抬高让两三张卡铺满行宽(拆分自窄栏时的 150px,语境变化属 ADR-0013) */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 14px; }
   .card {
     background: linear-gradient(160deg, #16224200, #0a0f1e00), var(--panel-2);
     border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
@@ -42,6 +44,7 @@
 <header>
   <h1>CWMS · 大屏看板</h1>
   <span class="sub">指标与作业：CardView + task/changed（ADR-0004/0010）｜<a href="/pc" style="color:var(--accent)">PC →</a></span>
+  <span class="stock" id="stock"></span>
 </header>
 
 <main>
@@ -62,6 +65,7 @@ async function api(path) {
 
 async function refresh() {
   const s = await api('state')
+  $('stock').textContent = `账本总量 ${s.totals.stock}`
   $('cards').innerHTML = s.cards.map((c) =>
     `<div class="card"><div class="t">${esc(c.title)}</div><div class="v">${esc(c.value)}</div></div>`).join('')
   $('board').innerHTML = s.board.columns.map((col) =>

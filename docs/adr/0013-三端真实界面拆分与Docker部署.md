@@ -17,3 +17,8 @@
 
 - 正面:端的边界=部署边界,「换 UI = 换渲染器」从单页内三个 div 变成三个独立交付物;PDA 原生化后扫码枪广播、震动反馈、扫码优先交互才可能落地。
 - 负面/限制:两页共享样式靠复制(零构建理念的代价,页面拆多后再议共享方案);nginx 反代多一跳;内存态下 backend 重启丢数据;PDA 应用引入安卓构建链(JDK/Gradle/SDK),CI 暂不覆盖 APK 构建。
+
+## 附注(构建环境事实,2026-08-31)
+
+- **基础镜像走 daocloud 镜像源**(`docker.m.daocloud.io/library/node:22-alpine`、`…/nginx:alpine`):本机所在网络对 Docker Hub(registry-1.docker.io)直连不可达,镜像源选择是环境事实而非架构偏好;在可直连的环境可等价替换为官方镜像名。
+- **`/` 的两形态行为**:本地 node 形态 302 → `/pc`(server.ts);Docker nginx 形态 `location /` 直出 pc.html(200)。两种形态用户可达结果一致(都是 PC 操作台),差异仅在响应语义。
