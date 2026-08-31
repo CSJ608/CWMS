@@ -26,8 +26,7 @@ object Api {
                     readTimeout = 30_000
                     requestMethod = "GET"
                 }
-                val body = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(body)
+                val json = parseBody(conn, readBody(conn))
                 main.post { cb(true, json, "") }
             } catch (e: Exception) {
                 main.post { cb(false, null, e.message ?: e.toString()) }
@@ -51,8 +50,7 @@ object Api {
                     setFixedLengthStreamingMode(bytes.size)
                 }
                 conn.outputStream.use { it.write(bytes) }
-                val body = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(body)
+                val json = parseBody(conn, readBody(conn))
                 main.post { cb(true, json, "") }
             } catch (e: Exception) {
                 main.post { cb(false, null, e.message ?: e.toString()) }
@@ -61,4 +59,18 @@ object Api {
             }
         }
     }
+
+    /** 非法请求(如完结会话再提交)服务端回 500 + JSON 错误体:不读 errorStream 会把 URL 当异常文案。 */
+    private fun readBody(conn: HttpURLConnection): String {
+        val stream = if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream
+        return stream?.bufferedReader()?.readText()
+            ?: throw RuntimeException("HTTP ${conn.responseCode}")
+    }
+
+    private fun parseBody(conn: HttpURLConnection, body: String): JSONObject =
+        try {
+            JSONObject(body)
+        } catch (e: Exception) {
+            throw RuntimeException("服务端返回非 JSON(HTTP ${conn.responseCode})")
+        }
 }

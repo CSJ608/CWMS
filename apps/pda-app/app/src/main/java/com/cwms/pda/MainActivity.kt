@@ -198,7 +198,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun submitFromField() {
         val raw = editScan.text.toString().trim()
-        val snap = activeSession ?: run { showError(getString(R.string.no_session)); return }
+        val snap = activeSession?.takeIf { it.optString("status") == "running" }
+            ?: run { showError(getString(R.string.no_session)); return }
         val expectsQty = snap.optJSONObject("prompt")?.optString("expects") == "input"
         if (!expectsQty && raw.isEmpty()) return
         val value: Any = if (expectsQty) (raw.toIntOrNull()?.takeIf { it > 0 } ?: run {
