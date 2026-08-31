@@ -2,7 +2,15 @@
 
 > 每次会话结束前更新本文件：下次会话从这里继续。
 
-## 最近更新：2026-08-29（agent-lab Phase 1 自治运行收官——R1~R4 全部合并）
+## 最近更新：2026-08-31（三端真实化——Docker 部署 + 原生 PDA 应用，ADR-0013）
+
+- **三端从单页模拟器拆为真实形态**（PR #33/#34，全程门禁纪律：CI 三检 + 评审门、修复各 ≤2 轮、从严者胜）：`docker compose up --build -d` → PC `http://<本机IP>:8080/pc`、大屏 `/board`（nginx 静态两页 + 反代 /api 两容器，基础镜像走 daocloud 源——Docker Hub 直连不可达）；web 单页与 PDA 模拟器退役，`pnpm web` 本地单进程形态保留。
+- **原生安卓 PDA 应用**（`apps/pda-app`，Urovo DT50 真机联调通过）：扫码会话工作流直连 /api；双通道扫码（广播 RECEIVER_EXPORTED + extra 兜底键/byte[] UTF-8，键盘楔 Enter 消费）；工业反馈（错误双脉冲/成功单脉冲）；真机证据：会话一成一败全广播注入驱动、500 errorStream 文案呈现、force-stop 重启孤儿会话认领、qty 校验拦截；纯逻辑 JUnit 5 用例。构建：`JAVA_HOME=…openjdk\jdk-21.0.8 ANDROID_HOME=…android-sdk gradle assembleDebug`（Gradle 8.10.2 在 C:\work\tools，腾讯镜像；SDK 在 Program Files (x86)\Android）。**真机操作要点**：adb reverse tcp:8080（设备 Wi-Fi 到本机当前不通）；锁屏需唤醒上滑；DataWedge byte[] 实扫待配 action 验证（issue #35）。
+- **新技能 pda-scan-universal**（`~/.agents/skills/`，AI 维护）：从 wms-pda-design 抽取通用部分并经 Zebra/Android/Material 官方文档校验增补（intent 交付机制 SDK 淘汰线、RECEIVER_EXPORTED 罚则、48dp 触达基线）；原项目技能未动。
+- **评审拦截记录**：#33 三门 5 条（ADR 悬空引用/大屏丢账本总量/auto-fill 空轨道不塌缩——视觉门像素实测抓根因）；#34 三门（在途吞码/三处静默/孤儿双开/IME 矛盾/qty 不测/500 零复验），全部采纳修复复审 pass。门禁留档观察并入 issue #35（含**端到端 opId 幂等链断裂**存量问题：server.ts 每次 pda/submit 新铸 opId，客户端不携带）。
+- 全景：16 目录（15 pnpm 包 + pda-app 独立 Gradle 工程），ADR-0001~0013，86 测试 + 5 安卓单测，main 全绿。
+
+## 上一步：2026-08-29（agent-lab Phase 1 自治运行收官——R1~R4 全部合并）
 
 - **多智能体路线图自治实验 Phase 1 完成**（#27）：单执行者+PM+五评审门跑完路线图 4 项——PR #29 toast 反馈（修复 2 轮）、#30 PDA 会话历史（修复 1 轮）、#31 PcTable 列等值筛选（含 ADR-0009 增补、server.ts 头序缺陷连带修复）、#32 ledger 事件 ts 时间戳（含 ADR-0011 增补、时钟注入、重放非参与性双证明）。**人工干预 0、MAST 协调类中断 0、实验 PR 4/10**；8 条门禁拦截全部采纳（视觉 2/代码 2/UX 4，质量与架构门零拦截——判定张力已在 #27 总结呈报，判定留给人）。门禁留档存量问题清单与判定材料见 #27 评论 5463370119。main 终态：15 包、ADR-0001~0012（0009/0011 含增补）、86 测试全绿。浏览器证据存 `C:\work\OpenCode\cwms-agent-lab-evidence\`（本地）。
 - **下一步（按优先级）**：① 人按 #27 判定标准复核 Phase 1（重点：质量/架构门零拦截的定性、PM docs 直推 main 的解释确认）→ 关闭或追加实验；② 处置门禁留档的存量问题清单（转 issues 或下轮路线图：PDA 程序员文案/无放弃会话/按钮防抖/toast 堆叠上限/描述符格式化词汇等）；③ #21/#20 验证期观察照旧（人主导）。
