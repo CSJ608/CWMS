@@ -10,5 +10,6 @@
     <color name="accent">#4F8CFF</color>
     <color name="green">#35C48D</color>
     <color name="red">#FF6B6B</color>
+    <color name="error_bg">#6B2F2F</color> <!-- 深红底:红幅白字对比 AA(浅红 #FF6B6B 底不足) -->
     <color name="amber">#FFB35C</color>
 </resources>

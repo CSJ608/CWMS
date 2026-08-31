@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
     private val wfTitles = linkedMapOf<String, String>() // id -> title,保持服务端顺序
     private var activeSession: JSONObject? = null
+    private var stateLoadedOnce = false // 冷启动首次拉取失败要出声;其后轮询静默
 
     @Volatile private var inflight = false // 加载互斥:请求在途时忽略扫码/提交(双通道同触发兜底)
 
@@ -109,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshState(loud = false)
+        refreshState(loud = !stateLoadedOnce)
         editScan.requestFocus()
         startPolling()
     }
@@ -142,6 +143,7 @@ class MainActivity : AppCompatActivity() {
                 if (loud) showError(error)
                 return@get
             }
+            stateLoadedOnce = true
             val pda = json?.optJSONObject("pda") ?: return@get
             syncWorkflows(pda.optJSONArray("workflows") ?: JSONArray())
             renderHistory(pda.optJSONArray("sessions") ?: JSONArray())
@@ -160,16 +162,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** 服务端是会话真相源:活动会话被外部(如 PC)终结时,本地视图跟随。 */
+    /** 服务端是会话真相源:本地无会话时认领最新的在途会话(重启/进程被杀后恢复视图,防双开);被外部终结时跟随。 */
     private fun syncActiveFromServer(sessions: JSONArray) {
-        val id = activeSession?.optString("id") ?: return
-        val snap = (0 until sessions.length()).asSequence()
-            .map { sessions.optJSONObject(it) }.firstOrNull { it?.optString("id") == id }
-        if (snap == null) {
-            activeSession = null
-            renderSession()
-        } else if (snap.optString("status") != "running" && activeSession?.optString("status") == "running") {
-            activeSession = snap
+        val id = activeSession?.optString("id")
+        if (id != null) {
+            val snap = (0 until sessions.length()).asSequence()
+                .map { sessions.optJSONObject(it) }.firstOrNull { it?.optString("id") == id }
+            if (snap == null) {
+                activeSession = null
+                renderSession()
+            } else if (snap.optString("status") != "running" && activeSession?.optString("status") == "running") {
+                activeSession = snap
+                renderSession()
+            }
+            return
+        }
+        val orphan = (0 until sessions.length()).asSequence()
+            .map { sessions.optJSONObject(it) }
+            .lastOrNull { it?.optString("status") == "running" }
+        if (orphan != null) {
+            activeSession = orphan
             renderSession()
         }
     }
@@ -177,7 +189,8 @@ class MainActivity : AppCompatActivity() {
     // ---- 会话操作 ----
     private fun startSession() {
         if (inflight) return // 加载互斥:防「开始会话」连点双开会话
-        val wfId = wfTitles.keys.toList().getOrNull(spinner.selectedItemPosition) ?: return
+        val wfId = wfTitles.keys.toList().getOrNull(spinner.selectedItemPosition)
+            ?: run { showError("工作流未加载——请到设置页检查服务器地址"); return }
         inflight = true
         Api.post(Prefs.server(this), "/api/pda/start", JSONObject().put("workflowId", wfId)) { ok, json, error ->
             inflight = false
@@ -192,17 +205,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onScanArrived(text: String) {
+        if (inflight) return // 在途期间扫码整体忽略(不覆写输入框,防吞码后又被清空)
         editScan.setText(text)
         submitFromField()
     }
 
     private fun submitFromField() {
+        if (inflight) return // 在途期间提交忽略;键盘路径输入框保留原值可再提交
         val raw = editScan.text.toString().trim()
         val snap = activeSession?.takeIf { it.optString("status") == "running" }
             ?: run { showError(getString(R.string.no_session)); return }
         val expectsQty = snap.optJSONObject("prompt")?.optString("expects") == "input"
         if (!expectsQty && raw.isEmpty()) return
-        val value: Any = if (expectsQty) (raw.toIntOrNull()?.takeIf { it > 0 } ?: run {
+        val value: Any = if (expectsQty) (ScanValues.qtyOf(raw) ?: run {
             showError("数量须为正整数"); return
         }) else raw
         submitValue(snap.optString("id"), value)
@@ -232,6 +247,7 @@ class MainActivity : AppCompatActivity() {
             txtStep.text = getString(R.string.no_session)
             txtExpect.visibility = View.GONE
             txtOutcome.visibility = View.GONE
+            editScan.showSoftInputOnFocus = false
             boxCollected.removeAllViews()
             return
         }
@@ -245,9 +261,12 @@ class MainActivity : AppCompatActivity() {
             }
             txtExpect.text = waiting
             txtExpect.visibility = View.VISIBLE
+            // 数量步是唯一需要软键盘的步骤;扫码步禁 IME 防键盘楔冲突(扫码优先支柱)
+            editScan.showSoftInputOnFocus = p.optString("expects") == "input"
         } else {
             txtStep.text = "会话已结束"
             txtExpect.visibility = View.GONE
+            editScan.showSoftInputOnFocus = false
         }
 
         val o = snap.optJSONObject("outcome")
@@ -341,6 +360,7 @@ class MainActivity : AppCompatActivity() {
             text = detail
             textSize = 13f
             setTextColor(Color.parseColor("#8EA0C0"))
+            typeface = android.graphics.Typeface.MONOSPACE // 码字等宽(防误读支柱)
         }
         row.addView(badge)
         row.addView(body, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
