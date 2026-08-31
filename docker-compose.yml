@@ -1,0 +1,18 @@
+# 三端真实部署（ADR-0013）：backend = 组合根 API，frontend = 静态两页 + /api 反代
+# 用法：docker compose up --build -d → PC http://<本机IP>:8080/pc · 大屏 /board · PDA 应用直连 /api
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    expose:
+      - "8787"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend

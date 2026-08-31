@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CWMS · 三端投影渲染器</title>
+<title>CWMS · PC 操作台</title>
 <style>
   :root {
     --bg: #0b1020; --panel: #121a30; --panel-2: #0e1526; --line: #223055;
@@ -21,7 +21,7 @@
   header h1 { font-size: 17px; margin: 0; letter-spacing: 0.5px; }
   header .sub { color: var(--muted); font-size: 12.5px; }
   header .stock { margin-left: auto; color: var(--green); font-weight: 600; }
-  .ops { display: flex; gap: 18px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex-wrap: wrap; }
+  .ops { display: flex; gap: 18px; padding: 12px 22px; border-bottom:  1px solid var(--line); background: var(--panel-2); flex-wrap: wrap; }
   fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 10px; margin: 0; background: var(--panel); }
   legend { color: var(--accent); font-size: 12.5px; padding: 0 6px; }
   fieldset .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -36,48 +36,19 @@
   }
   button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
   button:active { transform: translateY(1px); }
-  main { display: grid; grid-template-columns: 1fr 1.15fr 330px; gap: 14px; padding: 14px 22px; }
+  main { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; padding: 14px 22px; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
   .panel h2 { font-size: 13px; margin: 2px 0 10px; color: var(--muted); font-weight: 600; letter-spacing: 1px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
-  .card {
-    background: linear-gradient(160deg, #16224200, #0a0f1e00), var(--panel-2);
-    border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
-  }
-  .card .t { color: var(--muted); font-size: 12px; }
-  .card .v { font-size: 30px; font-weight: 700; margin-top: 4px; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .board { display: flex; gap: 8px; overflow-x: auto; }
-  .col { min-width: 118px; flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
-  .col .st { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  .col .st b { color: var(--text); }
-  .chip { font-size: 11.5px; background: #1b2449; border-radius: 5px; padding: 2px 6px; margin-bottom: 4px; color: #b9c7e4; word-break: break-all; }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
   th { color: var(--muted); font-weight: 600; }
   td { font-variant-numeric: tabular-nums; }
   .tbl + .tbl { margin-top: 14px; }
-  .pda-frame {
-    background: #05070d; border: 2px solid var(--line); border-radius: 22px; padding: 14px 12px;
-    display: flex; flex-direction: column; gap: 10px; min-height: 430px;
-  }
-  .pda-title { text-align: center; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
-  .pda-screen { background: #0d1424; border-radius: 14px; padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
-  .pda-prompt { border: 1px dashed var(--accent); border-radius: 10px; padding: 10px; }
-  .pda-prompt .act { font-size: 15px; font-weight: 700; }
-  .pda-prompt .exp { color: var(--amber); font-size: 12px; margin-top: 2px; }
-  .pda-log { font-size: 12px; color: var(--muted); overflow-y: auto; flex: 1; }
-  .pda-log div { padding: 2px 0; border-bottom: 1px dotted #1a2440; }
-  .pda-input { display: flex; gap: 6px; }
-  .pda-input input { flex: 1; width: auto; }
-  .outcome-ok { color: var(--green); } .outcome-bad { color: var(--red); }
   .tasks { font-size: 12px; }
   .tasks .row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dotted #1a2440; color: var(--muted); }
-  .history { font-size: 12px; }
-  .history .row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; padding: 4px 0; border-bottom: 1px dotted #1a2440; color: var(--muted); }
   .badge { border-radius: 4px; padding: 0 6px; font-size: 11px; }
   .b-created { background: #233; } .b-assigned { background: #234; } .b-executing { background: #375078; }
   .b-completed { background: #1d5c41; } .b-cancelled { background: #6b2f2f; }
-  .b-ok { background: #1d5c41; } .b-bad { background: #6b2f2f; }
   .empty { color: #55648a; font-size: 12.5px; padding: 8px 2px; }
   /* 不变量：top 必须保持在 header 与 .ops 工具条（合计 ≈150px，随头部/工具条排版变化）之下——
      越上会遮 header 右侧「账本总量」计数；1024–1200px 窄视口下长 toast 还会压住出库库位输入与「拣货」按钮 */
@@ -96,8 +67,8 @@
 </head>
 <body>
 <header>
-  <h1>CWMS · 三端投影</h1>
-  <span class="sub">同一内核，三种函数：PC = 数据 · 大屏 = 指标 · PDA = 任务（ADR-0004）</span>
+  <h1>CWMS · PC 操作台</h1>
+  <span class="sub">数据与操作：表格投影 + 任务驱动（ADR-0004/0009）｜<a href="/board" style="color:var(--accent)">大屏 →</a></span>
   <span class="stock" id="stock"></span>
 </header>
 
@@ -126,7 +97,7 @@
 
 <main>
   <section class="panel">
-    <h2>PC · 表格投影（PcTable → query）</h2>
+    <h2>表格投影（PcTable → query）</h2>
     <div class="row" style="display:flex;gap:6px;margin-bottom:10px">
       <input id="flt-loc" placeholder="按库位筛选库存一览…" style="width:150px" />
       <button class="ghost" onclick="clearLocFilter()">清空</button>
@@ -135,32 +106,8 @@
   </section>
 
   <section class="panel">
-    <h2>大屏 · 卡片与作业看板（CardView + task/changed）</h2>
-    <div class="cards" id="cards"></div>
-    <div class="board" id="board"></div>
-    <h2 style="margin-top:16px">任务轨迹（最近 12 条）</h2>
+    <h2>任务轨迹（最近 12 条）</h2>
     <div class="tasks" id="tasks"></div>
-  </section>
-
-  <section class="panel">
-    <h2>PDA · 扫码工作流模拟器</h2>
-    <div class="pda-frame">
-      <div class="pda-title">PDA-01</div>
-      <div class="pda-screen">
-        <div class="row" style="display:flex;gap:6px">
-          <select id="wf"></select>
-          <button class="ghost" onclick="startSession()">开始会话</button>
-        </div>
-        <div id="pda-active"></div>
-        <div class="pda-log" id="pda-log"></div>
-        <div class="pda-input" id="pda-input" style="display:none">
-          <input id="scan" placeholder="扫码 / 输入…" />
-          <button onclick="submitScan()">提交</button>
-        </div>
-      </div>
-    </div>
-    <h2 style="margin-top:16px">会话历史（最近 6 条）</h2>
-    <div class="history" id="pda-history"></div>
   </section>
 </main>
 
@@ -172,8 +119,6 @@ const qtyOf = (raw) => {
   const n = Number(raw)
   return Number.isInteger(n) && n > 0 ? n : null
 }
-let activeSession = null
-let sessions = []
 let locFilter = ''
 
 async function api(path, body) {
@@ -186,11 +131,6 @@ async function api(path, body) {
 async function refresh() {
   const s = await api('state' + (locFilter ? `?table=inventory&key=location&value=${encodeURIComponent(locFilter)}` : ''))
   $('stock').textContent = `账本总量 ${s.totals.stock}`
-  $('cards').innerHTML = s.cards.map((c) =>
-    `<div class="card"><div class="t">${esc(c.title)}</div><div class="v">${esc(c.value)}</div></div>`).join('')
-  $('board').innerHTML = s.board.columns.map((col) =>
-    `<div class="col"><div class="st"><span>${esc(col.status)}</span><b>${col.count}</b></div>` +
-    col.taskIds.map((id) => `<div class="chip">${esc(id)}</div>`).join('') + `</div>`).join('')
   $('tables').innerHTML = s.tables.length
     ? s.tables.map((t) => `
         <div class="tbl"><h2 style="color:var(--accent)">${esc(t.title)}</h2>
@@ -203,67 +143,12 @@ async function refresh() {
     `<div class="row"><span class="badge b-${t.status}">${t.status}</span><span>${esc(t.id)}</span>${
       t.reason ? `<span style="color:var(--red)">（${esc(t.reason)}）</span>` : ''}</div>`).join('')
     : `<div class="empty">（无任务）</div>`
-
-  $('wf').innerHTML = s.pda.workflows.map((w) => `<option value="${esc(w.id)}">${esc(w.title)}</option>`).join('')
-  sessions = s.pda.sessions
-  const snap = activeSession && sessions.find((x) => x.id === activeSession.id)
-  if (snap) renderPda(snap)
-  else if (activeSession) { renderPda(null); activeSession = null }
-
-  const wfTitle = {}
-  s.pda.workflows.forEach((w) => { wfTitle[w.id] = w.title })
-  const done = sessions.filter((x) => x.status === 'completed').slice(-6)
-  $('pda-history').innerHTML = done.length ? done.slice().reverse().map((x) => {
-    const ok = x.outcome && x.outcome.blocked === false
-    return `
-    <div class="row">
-      <span class="badge ${ok ? 'b-ok' : 'b-bad'}">${ok ? '成功' : '失败'}</span>
-      <span>${esc(wfTitle[x.workflowId] ?? x.workflowId)}</span>
-      ${x.taskId ? `<span>任务 ${esc(x.taskId)}</span>` : ''}
-      ${historyDetail(x)}
-    </div>`
-  }).join('')
-    : `<div class="empty">（无会话）</div>`
-}
-
-function historyDetail(session) {
-  const o = session.outcome
-  if (!o || o.blocked === undefined) return ''
-  const verdict = o.blocked === false
-    ? `<span class="outcome-ok">✔ 成功 → ${esc(o.location ?? '')}</span>`
-    : `<span class="outcome-bad">✘ ${esc(o.reason ?? '被拒绝')}</span>`
-  const collected = Object.entries(session.collected ?? {})
-    .map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' · ')
-  return verdict + (collected ? `<span>${collected}</span>` : '')
 }
 
 function clearLocFilter() {
   $('flt-loc').value = ''
   locFilter = ''
   refresh()
-}
-
-function renderPda(snap) {
-  if (!snap) {
-    $('pda-active').innerHTML = ''
-    $('pda-input').style.display = 'none'
-    return
-  }
-  $('pda-input').style.display = snap.status === 'running' ? 'flex' : 'none'
-  const p = snap.prompt
-  const outcome = snap.outcome
-  $('pda-active').innerHTML = `
-    <div class="pda-prompt">
-      <div class="act">${p ? `${p.index}/${p.total} · ${esc(p.action)}` : '会话已结束'}</div>
-      <div class="exp">${p ? `等待${p.expects === 'input' ? '键盘输入' : p.expects === 'scan' ? '扫码' : '确认'} · opId 幂等保护中` : ''}</div>
-    </div>
-    ${outcome ? `<div class="${outcome.blocked === false ? 'outcome-ok' : 'outcome-bad'}">${
-      outcome.blocked === false ? `✔ 上架/出库成功 → ${esc(outcome.location ?? '')}` : `✘ ${esc(outcome.reason ?? '被拒绝')}`
-    }</div>` : ''}`
-  const lines = snap.collected && Object.keys(snap.collected).length
-    ? Object.entries(snap.collected).map(([k, v]) => `<div>${esc(k)} = ${esc(v)}</div>`).join('')
-    : '<div>（未采集）</div>'
-  $('pda-log').innerHTML = lines
 }
 
 async function doInbound() {
@@ -282,30 +167,6 @@ async function doOutbound() {
     sku: $('out-sku').value, lot: $('out-lot').value, qty, location: $('out-loc').value,
   })
   flash(r, (o) => `出库成功：${o.line.sku} ×${o.line.qty} 自 ${o.location} 发出`)
-  refresh()
-}
-async function startSession() {
-  const r = await api('pda/start', { workflowId: $('wf').value })
-  activeSession = r.result
-  renderPda(activeSession)
-  refresh()
-}
-async function submitScan() {
-  if (!activeSession) return
-  const raw = $('scan').value.trim()
-  const expectsQty = activeSession.prompt && activeSession.prompt.expects === 'input'
-  if (!expectsQty && !raw) return
-  const value = expectsQty ? qtyOf(raw) : raw
-  if (value == null) { toast('bad', '数量须为正整数'); return }
-  const r = await api('pda/submit', { sessionId: activeSession.id, value })
-  if (r.ok === false) { flash(r); return }
-  activeSession = r.result
-  if (activeSession.outcome) {
-    const noun = activeSession.workflowId === 'outbound-pick' ? '出库' : '上架'
-    report(activeSession.outcome, (o) => `${noun}成功 → ${o.location ?? ''}`)
-  }
-  $('scan').value = ''
-  renderPda(activeSession)
   refresh()
 }
 
@@ -338,7 +199,6 @@ function esc(v) {
 const fmtTime = (ms) => new Date(Number(ms)).toLocaleTimeString('zh-CN', { hour12: false })
 
 document.addEventListener('DOMContentLoaded', () => {
-  $('scan').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitScan() })
   $('flt-loc').addEventListener('input', () => { locFilter = $('flt-loc').value.trim(); refresh() })
   refresh()
   setInterval(refresh, 1500)

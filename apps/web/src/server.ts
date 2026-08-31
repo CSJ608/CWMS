@@ -1,10 +1,12 @@
 /**
- * web 渲染器（apps/web）：三端投影的第一个图形消费者（ADR-0004/0009/0010 的命题兑现）。
+ * web 渲染器（apps/web）：三端投影的图形消费者（ADR-0004/0009/0010/0013）。
  *
- * 组合根职责：组装与 demo 相同的系统，把描述符查询结果经 JSON 暴露给单页界面；
+ * 组合根职责：组装与 demo 相同的系统，把描述符查询结果经 JSON 暴露给界面；
  * UI 事件经小 API 驱动真实领域操作（任务机 + 账本），投影轮询刷新。
+ * 本地单进程同时服务两个静态页（/pc 操作台、/board 大屏）；Docker 部署时
+ * 静态与反代交给 nginx（docker-compose，ADR-0013），本服务只承担 /api。
  * 本应用不引入任何新缝、新契约——它是纯消费者（check-deps 的 app 角色豁免）。
- * 零依赖：node:http + 静态单页。
+ * 零依赖：node:http + 两个静态页。
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
@@ -160,14 +162,25 @@ async function readBody(req: IncomingMessage): Promise<Body> {
   }
 }
 
-const html = await readFile(fileURLToPath(new URL('index.html', import.meta.url)), 'utf8')
+const pcHtml = await readFile(fileURLToPath(new URL('pc.html', import.meta.url)), 'utf8')
+const boardHtml = await readFile(fileURLToPath(new URL('board.html', import.meta.url)), 'utf8')
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost')
   try {
-    if (req.method === 'GET' && url.pathname === '/') {
+    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/pc')) {
+      if (url.pathname === '/') {
+        res.writeHead(302, { location: '/pc' })
+        res.end()
+        return
+      }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      res.end(html)
+      res.end(pcHtml)
+      return
+    }
+    if (req.method === 'GET' && url.pathname === '/board') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+      res.end(boardHtml)
       return
     }
     if (req.method === 'GET' && url.pathname === '/api/state') {
@@ -201,5 +214,5 @@ const server = createServer(async (req, res) => {
 })
 
 server.listen(PORT, () => {
-  console.log(`CWMS 三端投影渲染器 → http://127.0.0.1:${PORT}（PC 表格 / 大屏看板 / PDA 扫码模拟器）`)
+  console.log(`CWMS 三端 API → http://127.0.0.1:${PORT}（/pc 操作台 · /board 大屏 · /api 投影与操作）`)
 })
